@@ -15,6 +15,7 @@ minutesPerFile = 60
 sampleRateRaw = 50 # [Hz]
 sampleRateTarg = 1
 
+dap_filenames = 'tower.z01.00.{:s}{:s}{:s}.{:s}0000.ttu200m.dat'
 starttimes = ['{:02d}'.format(hr) for hr in np.arange(24)] # 00, 01, ..., 23
 endtimes = ['{:02d}'.format(hr%24) for hr in np.arange(1,25)] # 01, 02, ..., 23, 00
 
@@ -130,7 +131,9 @@ def TTURawToMMC(path,startyear,startmonth,startday,outpath):
     hflux=np.zeros((Nz,signalTargSamples)) 
  
     #Open the output file
-    if os.path.isfile(outpath):
+    if os.path.isdir(outpath):
+        # if we got an output directory, generate default filename and tack it
+        # onto the end of the output dir path
         outfilename = "TTU200m_{:s}_{:s}{:s}-1Hz.dat".format(startyear,startmonth,startday)
         outpath = os.path.join(outpath,outfilename)
     fout = open(outpath,'w')
@@ -147,14 +150,13 @@ def TTURawToMMC(path,startyear,startmonth,startday,outpath):
         benchmark='CASE1',
         levels=len(z),
     ))
+
     ### For each hourly 50Hz file of TTU data...
-    for starttime in starttimes[0:24]:
+    for starttime,endtime in zip(starttimes,endtimes):
         if starttime == "23":
             endday='{:02d}'.format(int(startday)+1)
         endtime = endtimes[starttimes.index(starttime)]
-        #filename = "TTU200m_{:s}_{:s}{:s}_{:s}00_{:s}{:s}_{:s}00.dat".format(startyear,startmonth,startday,starttime,\
-        #                                                                     endmonth,endday,endtime) 
-        filename = "tower.z01.00.{:s}{:s}{:s}.{:s}0000.ttu200m.dat".format(startyear,startmonth,startday,starttime)
+        filename = dap_filenames.format(startyear,startmonth,startday,starttime)
         pathandname = '{:s}/{:s}'.format(path,filename)
         filelines = file_len(pathandname)
         f = open(pathandname,'r')
