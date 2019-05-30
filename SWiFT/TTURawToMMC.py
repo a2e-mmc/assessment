@@ -2,7 +2,6 @@
 import os
 import sys
 import numpy as np
-from math import *
 
 # measurement heights [ft]
 ftlevels = [3,8,13,33,55,155,245,382,519,656]
@@ -37,6 +36,8 @@ tilts = [[0.012954624102180665, 0.4528733026774165],
          [0.0393425898140506, -0.31127834356150985],
          [0.01832543831154384, -1.3098530959146042]]
 
+
+#==============================================================================
 
 def file_len(fname):
     with open(fname) as f:
@@ -194,8 +195,9 @@ def TTURawToMMC(path,startyear,startmonth,startday,outpath):
         gamma = cp/cv
         p00 = 1.0e5 #(Pa)
         th = np.multiply(t,np.power(p00/(100.0*p),R_cp))
-### As of 4_15_19 JAS added Branko form of tilt correction from EOL description
-# Tilt correction
+
+        ### As of 4_15_19 JAS added Branko form of tilt correction from EOL description
+        # Tilt correction
         uv=[]
         ut=[]
         vt=[]
@@ -207,17 +209,17 @@ def TTURawToMMC(path,startyear,startmonth,startday,outpath):
             tilt = tilts[lvl][0]
             tiltaz = tilts[lvl][1]
             #Wf = ( sin(tilt)*cos(tiltaz), sin(tilt)*sin(tiltaz), cos(tilt) )
-            wf1 = sin(tilt)*cos(tiltaz)
-            wf2 = sin(tilt)*sin(tiltaz)
-            wf3 = cos(tilt)
+            wf1 = np.sin(tilt) * np.cos(tiltaz)
+            wf2 = np.sin(tilt) * np.sin(tiltaz)
+            wf3 = np.cos(tilt)
             #U'f = ((cos(tilt), 0, -sin(tilt)*cos(tiltaz))
-            uf1 = cos(tilt)
+            uf1 = np.cos(tilt)
             uf2 = 0.
-            uf3 = -sin(tilt)*cos(tiltaz)
-            ufm = sqrt(uf1*uf1+uf2*uf2+uf3*uf3)
-            uf1 = uf1/ufm
-            uf2 = uf2/ufm
-            uf3 = uf3/ufm
+            uf3 = -np.sin(tilt) * np.cos(tiltaz)
+            ufm = np.sqrt(uf1**2 + uf2**2 + uf3**2)
+            uf1 = uf1 / ufm
+            uf2 = uf2 / ufm
+            uf3 = uf3 / ufm
             #vf = wf x uf 
             vf1 = wf2 * uf3 - wf3 * uf2
             vf2 = wf3 * uf1 - wf1 * uf3
@@ -228,7 +230,8 @@ def TTURawToMMC(path,startyear,startmonth,startday,outpath):
             u[lvl,:] = ug
             v[lvl,:] = vg
             w[lvl,:] = wg
-### END Tilt Correction
+        ### END Tilt Correction
+
         i=0
         j=0
         subSampleByMean = False
