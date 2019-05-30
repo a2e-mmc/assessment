@@ -2,6 +2,7 @@
 import os
 import sys
 import numpy as np
+import pandas as pd
 
 # templates for writing out data in the legacy MMC ASCII format
 from mmctools.mmcdata import header, record, datarow
@@ -15,9 +16,9 @@ minutesPerFile = 60
 sampleRateRaw = 50 # [Hz]
 sampleRateTarg = 1
 
-dap_filenames = 'tower.z01.00.{:s}{:s}{:s}.{:s}0000.ttu200m.dat'
-starttimes = ['{:02d}'.format(hr) for hr in np.arange(24)] # 00, 01, ..., 23
-endtimes = ['{:02d}'.format(hr%24) for hr in np.arange(1,25)] # 01, 02, ..., 23, 00
+dap_filenames = 'tower.z01.00.%Y%m%d.%H0000.ttu200m.dat'
+starttimes = np.arange(24)              # 00, 01, ..., 23
+endtimes = np.mod(np.arange(1,25), 24)  # 01, 02, ..., 23, 00
 
 #JAS 1108-1111, 4-day tilt-corrected
 reg_coefs = [[-0.02047518907375512, -0.011649366757767144, -0.005668625739156408],
@@ -51,19 +52,15 @@ def file_len(fname):
     return i + 1
 
 
-def TTURawToMMC(path,startyear,startmonth,startday,outpath):
-    #startyear="2013"
-    #startmonth="11"
-    #startday="09"
-    dateStr = startyear+"-"+startmonth+"-"+startday
+def TTURawToMMC(dpath,startdate,outpath):
+    startdate = pd.to_datetime(startdate)
+    dateStr = startdate.strftime('%Y-%m-%d')
     print("dateStr = {:s}".format(dateStr))
-    endyear = startyear
-    endmonth = startmonth
-    endday = startday
     z = 0.3048*np.array(ftlevels)
     secondsPerMinute = 60
     signalRawSamples = sampleRateRaw*secondsPerMinute*minutesPerFile
     signalTargSamples = sampleRateTarg*secondsPerMinute*minutesPerFile
+
     #Declare a few lists for later use as indices, etc.
     tme=list()
     iu=[1,11,21,31,41,51,61,71,81,91]
@@ -76,7 +73,6 @@ def TTURawToMMC(path,startyear,startmonth,startday,outpath):
     it=list()
     ip=list()
     irh=list()
- 
     Nz = len(z)
     for i in range(Nz):     #Define indices for each data feature over 10 levels of sonics
         iv.append(iu[i]+1)
@@ -134,7 +130,7 @@ def TTURawToMMC(path,startyear,startmonth,startday,outpath):
     if os.path.isdir(outpath):
         # if we got an output directory, generate default filename and tack it
         # onto the end of the output dir path
-        outfilename = "TTU200m_{:s}_{:s}{:s}-1Hz.dat".format(startyear,startmonth,startday)
+        outfilename = startdate.strftime('TTU200m_%Y_%m%d-1Hz.dat')
         outpath = os.path.join(outpath,outfilename)
     fout = open(outpath,'w')
 
@@ -153,13 +149,11 @@ def TTURawToMMC(path,startyear,startmonth,startday,outpath):
 
     ### For each hourly 50Hz file of TTU data...
     for starttime,endtime in zip(starttimes,endtimes):
-        if starttime == "23":
-            endday='{:02d}'.format(int(startday)+1)
-        endtime = endtimes[starttimes.index(starttime)]
-        filename = dap_filenames.format(startyear,startmonth,startday,starttime)
-        pathandname = '{:s}/{:s}'.format(path,filename)
-        filelines = file_len(pathandname)
-        f = open(pathandname,'r')
+        startdate = startdate.replace(hour=starttime)
+        filename = startdate.strftime(dap_filenames) # e.g., 'tower.z01.00.20131108.000000.ttu200m.dat'
+        fpath = os.path.join(dpath,filename)
+        filelines = file_len(fpath)
+        f = open(fpath,'r')
         head1 = f.readline()
         head2 = f.readline()
         head3 = f.readline()
@@ -345,9 +339,9 @@ def TTURawToMMC(path,startyear,startmonth,startday,outpath):
 #==============================================================================
 if __name__ == '__main__':
     import sys
-    if not len(sys.argv) == 6:
-        sys.exit('USAGE: {:s} rawdatadir startyear startmonth startday outpath'.format(sys.argv[0]))
-    inpath, startyear, startmonth, startday, outpath = sys.argv[1:]
+    if not len(sys.argv) == 4:
+        sys.exit('USAGE: {:s} rawdatadir startdate outpath'.format(sys.argv[0]))
+    inpath, startdate, outpath = sys.argv[1:]
 
-    TTURawToMMC(inpath,startyear,startmonth,startday,outpath)
+    TTURawToMMC(inpath,startdate,outpath)
 
