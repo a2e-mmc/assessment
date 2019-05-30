@@ -130,9 +130,11 @@ def TTURawToMMC(path,startyear,startmonth,startday,outpath):
     hflux=np.zeros((Nz,signalTargSamples)) 
  
     #Open the output file
-    outfilename = "TTU200m_{:s}_{:s}{:s}-1Hz.dat".format(startyear,startmonth,startday)
-    outpathandname = '{:s}/{:s}'.format(outpath,outfilename)
-    fout = open(outpathandname,'w')
+    if os.path.isfile(outpath):
+        outfilename = "TTU200m_{:s}_{:s}{:s}-1Hz.dat".format(startyear,startmonth,startday)
+        outpath = os.path.join(outpath,outfilename)
+    fout = open(outpath,'w')
+
     #Write the MMC file-header metadata
     fout.write(header.format(
         institution='SNL',
@@ -342,7 +344,7 @@ def TTURawToMMC(path,startyear,startmonth,startday,outpath):
 if __name__ == '__main__':
     import sys
     if not len(sys.argv) == 6:
-        sys.exit('USAGE: {:s} inpath startyear startmonth startday outpath'.format(sys.argv[0]))
+        sys.exit('USAGE: {:s} rawdatadir startyear startmonth startday outpath'.format(sys.argv[0]))
     inpath, startyear, startmonth, startday, outpath = sys.argv[1:]
 
     TTURawToMMC(inpath,startyear,startmonth,startday,outpath)
