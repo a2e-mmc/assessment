@@ -53,6 +53,11 @@ def file_len(fname):
 
 
 def TTURawToMMC(dpath,startdate,outpath):
+    """Read files with 'dap_filenames' format corresponding to
+    'startdate' from 'dpath', write out MMC data to 'outpath', which
+    may be either a file path or a directory path (a default filename
+    will be generated).
+    """
     startdate = pd.to_datetime(startdate)
     dateStr = startdate.strftime('%Y-%m-%d')
     print("dateStr = {:s}".format(dateStr))
