@@ -320,3 +320,13 @@ def TTURawToMMC(path,startyear,startmonth,startday,outpath):
     fout.close()
     print("Done!")
 
+
+#==============================================================================
+if __name__ == '__main__':
+    import sys
+    if not len(sys.argv) == 6:
+        sys.exit('USAGE: {:s} inpath startyear startmonth startday outpath'.format(sys.argv[0]))
+    inpath, startyear, startmonth, startday, outpath = sys.argv[1:]
+
+    TTURawToMMC(inpath,startyear,startmonth,startday,outpath)
+
