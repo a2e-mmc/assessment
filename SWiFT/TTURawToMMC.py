@@ -3,8 +3,12 @@ import os
 import sys
 import numpy as np
 
-# measurement heights [ft]
-ftlevels = [3,8,13,33,55,155,245,382,519,656]
+# templates for writing out data in the legacy MMC ASCII format
+from mmctools.mmcdata import header, record, datarow
+
+# measurement locations
+ttu_lat,ttu_lon = 33.6105,-102.0505
+ftlevels = [3,8,13,33,55,155,245,382,519,656] # sonic heights [ft]
 
 # sampling information
 minutesPerFile = 60
@@ -129,15 +133,17 @@ def TTURawToMMC(path,startyear,startmonth,startday,outpath):
     outpathandname = '{:s}/{:s}'.format(outpath,outfilename)
     fout = open(outpathandname,'w')
     #Write the MMC file-header metadata
-    fout.write("INSTITUTION:SNL\n")
-    fout.write("   LOCATION:TTUTOWER\n")
-    fout.write("   LATITUDE:   33.6105\n")   
-    fout.write("  LONGITUDE: -102.0505\n")
-    fout.write("   CODENAME:TOWER\n")
-    fout.write("   CODETYPE:DATA \n")
-    fout.write("   CASENAME:DIURNAL\n")
-    fout.write("  BENCHMARK:CASE1\n")
-    fout.write("     LEVELS:     10\n")
+    fout.write(header.format(
+        institution='SNL',
+        location='TTUTOWER',
+        latitude=ttu_lat,
+        longitude=ttu_lon,
+        codename='TOWER',
+        codetype='DATA',
+        casename='DIURNAL',
+        benchmark='CASE1',
+        levels=len(z),
+    ))
     ### For each hourly 50Hz file of TTU data...
     for starttime in starttimes[0:24]:
         if starttime == "23":
@@ -312,18 +318,21 @@ def TTURawToMMC(path,startyear,startmonth,startday,outpath):
                 else:
                     j=j+1
         for i in range(um.shape[1]):
-            fout.write("                   \n")
-            fout.write("       DATE:"+dateStr+"\n")
-            fout.write("       TIME:"+str(tmem[i][10:19])+"\n")
-            fout.write("FRICTION VELOCITY [m/s] =    0.25607\n")
-            fout.write("SURFACE ROUGHNESS [m]   =    0.10000\n")
-            fout.write("SKIN TEMPERATURE [K]    = -999.00000\n")
-            fout.write("SURFACE FLUX [Km/s]     = -999.00000\n")
-            fout.write("             Z [m]           U [m/s]           V [m/s]           W [m/s]            TH [K]           P [mbar]    TKE [m^2/s^2]   TAU11 [m^2/s^2]   TAU12 [m^2/s^2]   TAU13 [m^2/s^2]   TAU22 [m^2/s^2]   TAU23 [m^2/s^2]   TAU33 [m^2/s^2]      HFLUX [Km/s]\n")
-            for j in range(10):
-                fout.write(("%18.3f"*4 + "%18.2f"*2 + "%18.3f"*1 + "%18.5f"*7+"\n")%(z[j],um[j,i],vm[j,i],wm[j,i],thm[j,i],pm[j,i], \
-                                                                                tkem[j,i],tau11[j,i],tau12[j,i],tau13[j,i], \
-                                                                                tau22[j,i],tau23[j,i],tau33[j,i],hflux[j,i]))
+            # write record header
+            fout.write(record.format(
+                date=dateStr,
+                time=str(tmem[i][10:19]),
+                ustar=0.25607,
+                z0=0.1,
+                T0=-999,
+                qwall=-999,
+            ))
+            for allcols in zip(z,um[:,i],vm[:,i],wm[:,i],thm[:,i],pm[:,i],
+                               tkem[:,i], tau11[:,i], tau12[:,i], tau13[:,i],
+                               tau22[:,i], tau23[:,i], tau33[:,i], hflux[:,i]
+                              ):
+                # write data row
+                fout.write(datarow.format(*allcols))
     fout.close()
     print("Done!")
 
