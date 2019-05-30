@@ -19,6 +19,11 @@ sampleRateTarg = 1
 dap_filenames = 'tower.z01.00.%Y%m%d.%H0000.ttu200m.dat'
 starttimes = np.arange(24)              # 00, 01, ..., 23
 endtimes = np.mod(np.arange(1,25), 24)  # 01, 02, ..., 23, 00
+varnames = ['unorth','vwest','w','ustream','vcross','wdir','tsonic','t','p','rh']
+
+# output options
+subSampleByMean = False
+dummyval = np.array(-999.000).astype(np.float32) 
 
 #JAS 1108-1111, 4-day tilt-corrected
 reg_coefs = [[-0.02047518907375512, -0.011649366757767144, -0.005668625739156408],
@@ -45,12 +50,11 @@ tilts = [[0.012954624102180665, 0.4528733026774165],
 
 #==============================================================================
 
-def file_len(fname):
-    with open(fname) as f:
-        for i, l in enumerate(f):
-            pass
-    return i + 1
-
+#def file_len(fname):
+#    with open(fname) as f:
+#        for i, l in enumerate(f):
+#            pass
+#    return i + 1
 
 def TTURawToMMC(dpath,startdate,outpath):
     """Read files with 'dap_filenames' format corresponding to
@@ -62,33 +66,35 @@ def TTURawToMMC(dpath,startdate,outpath):
     dateStr = startdate.strftime('%Y-%m-%d')
     print("dateStr = {:s}".format(dateStr))
     z = 0.3048*np.array(ftlevels)
+    Nz = len(z)
+    datacolumns = pd.MultiIndex.from_product([z,varnames],names=['height',None])
     secondsPerMinute = 60
     signalRawSamples = sampleRateRaw*secondsPerMinute*minutesPerFile
     signalTargSamples = sampleRateTarg*secondsPerMinute*minutesPerFile
 
     #Declare a few lists for later use as indices, etc.
-    tme=list()
-    iu=[1,11,21,31,41,51,61,71,81,91]
-    iv=list()
-    iw=list()
-    ius=list()
-    ivc=list()
-    iwd=list()
-    its=list()
-    it=list()
-    ip=list()
-    irh=list()
-    Nz = len(z)
-    for i in range(Nz):     #Define indices for each data feature over 10 levels of sonics
-        iv.append(iu[i]+1)
-        iw.append(iu[i]+2)
-        ius.append(iu[i]+3)
-        ivc.append(iu[i]+4)
-        iwd.append(iu[i]+5)
-        its.append(iu[i]+6)
-        it.append(iu[i]+7)
-        ip.append(iu[i]+8)
-        irh.append(iu[i]+9)
+    tme = []
+#    tme=list()
+#    iu=[1,11,21,31,41,51,61,71,81,91]
+#    iv=list()
+#    iw=list()
+#    ius=list()
+#    ivc=list()
+#    iwd=list()
+#    its=list()
+#    it=list()
+#    ip=list()
+#    irh=list()
+#    for i in range(Nlevels):     #Define indices for each data feature over 10 levels of sonics
+#        iv.append(iu[i]+1)
+#        iw.append(iu[i]+2)
+#        ius.append(iu[i]+3)
+#        ivc.append(iu[i]+4)
+#        iwd.append(iu[i]+5)
+#        its.append(iu[i]+6)
+#        it.append(iu[i]+7)
+#        ip.append(iu[i]+8)
+#        irh.append(iu[i]+9)
    
     #declare and initialize to zero, named numpy arrays used here 
     u=np.zeros((Nz,signalRawSamples))
@@ -157,14 +163,39 @@ def TTURawToMMC(dpath,startdate,outpath):
         startdate = startdate.replace(hour=starttime)
         filename = startdate.strftime(dap_filenames) # e.g., 'tower.z01.00.20131108.000000.ttu200m.dat'
         fpath = os.path.join(dpath,filename)
-        filelines = file_len(fpath)
-        f = open(fpath,'r')
-        head1 = f.readline()
-        head2 = f.readline()
-        head3 = f.readline()
-        head4 = f.readline()
-        head5 = f.readline()
-        varnames = head5.split(",")
+#        filelines = file_len(fpath)
+
+        # read data file, which is in wide format, has column headers in the 5th
+        # row (irow=4), and datetimes in the first column (icol=0). Column
+        # names have variables changing fastest, then heights, i.e.,
+        #   unorth_3ft,vwest_3ft,...,unorth_8ft,vwest_8ft,...
+        df = pd.read_csv(fpath,skiprows=5,header=None,parse_dates={'datetime':[0]})
+        df = df.set_index('datetime')
+        df.columns = datacolumns
+        df = df.reorder_levels([1,0],axis=1).sort_index(axis=1) # now columns have heights changing fastest
+
+        # now time-height data may be selected by column name
+        # e.g., df['unorth'] has array data with shape (Nt,Nz)
+        # - note: for each raw TTU u_zonal = vsonic, and v_meridional = -usonic
+        tme += list(df.index) # append timestamps
+        u = df['vwest'].values.T
+        v = -df['unorth'].values.T
+        w = df['w'].values.T
+        us = df['ustream'].values.T
+        vc = df['vcross'].values.T
+        wd = df['wdir'].values.T
+        ts = df['tsonic'].values.T
+        t = df['t'].values.T
+        p = df['p'].values.T
+        rh = df['rh'].values.T
+
+#        f = open(fpath,'r')
+#        head1 = f.readline()
+#        head2 = f.readline()
+#        head3 = f.readline()
+#        head4 = f.readline()
+#        head5 = f.readline()
+#        varnames = head5.split(",")
         ####Subsample or complete sample the raw data and store in named numpy arrays
         sampleStride=int(sampleRateRaw/sampleRateTarg)
         ufRaw=np.zeros((Nz,sampleStride))
@@ -173,28 +204,28 @@ def TTURawToMMC(dpath,startdate,outpath):
         tfRaw=np.zeros((Nz,sampleStride))
         thfRaw=np.zeros((Nz,sampleStride))
         pfRaw=np.zeros((Nz,sampleStride))
-        for k in range(filelines-5):  #For each line in the file
-            aline = f.readline()
-            varvalues = aline.split(",")
-            tme.append(varvalues[0])
-            #Note for each raw TTU u_zonal = vsonic, and v_meridional = -usonic
-            tmpu_sonic = [ varvalues[l] for l in iv] 
-            tmpv_sonic = [ varvalues[l] for l in iu]
-            u[:,k] = tmpu_sonic
-            v[:,k] = tmpv_sonic
-            v[:,k] = -v[:,k]
-            w[:,k] = [ varvalues[l] for l in iw]
-            us[:,k] = [ varvalues[l] for l in ius]
-            vc[:,k] = [ varvalues[l] for l in ivc]
-            wd[:,k] = [ varvalues[l] for l in iwd]
-            ts[:,k] = [ varvalues[l] for l in its]
-            t[:,k] = [ varvalues[l] for l in it]
-            p[:,k] = [ varvalues[l] for l in ip]
-            rh[:,k] = [ varvalues[l] for l in irh]
-        tStop=len(tme)
-        tStrt=tStop-3600*sampleRateRaw
+#        for k in range(filelines-5):  #For each line in the file
+#            aline = f.readline()
+#            varvalues = aline.split(",")
+#            tme.append(varvalues[0])
+#            #Note for each raw TTU u_zonal = vsonic, and v_meridional = -usonic
+#            tmpu_sonic = [ varvalues[l] for l in iv] 
+#            tmpv_sonic = [ varvalues[l] for l in iu]
+#            u[:,k] = tmpu_sonic
+#            v[:,k] = tmpv_sonic
+#            v[:,k] = -v[:,k]
+#            w[:,k] = [ varvalues[l] for l in iw]
+#            us[:,k] = [ varvalues[l] for l in ius]
+#            vc[:,k] = [ varvalues[l] for l in ivc]
+#            wd[:,k] = [ varvalues[l] for l in iwd]
+#            ts[:,k] = [ varvalues[l] for l in its]
+#            t[:,k] = [ varvalues[l] for l in it]
+#            p[:,k] = [ varvalues[l] for l in ip]
+#            rh[:,k] = [ varvalues[l] for l in irh]
+        tStop = len(tme)
+        tStrt = tStop - 3600*sampleRateRaw
         print("tStrt,tStop = {:d},{:d}".format(tStrt,tStop))
-        tmem=tme[tStrt:tStop:sampleStride]
+        tmem = tme[tStrt:tStop:sampleStride]
         #A couple unit conversions on temperature(F->K) and pressure( 1 kPa to 10 mbars)
         t = (t - 32.)*5./9. + 273.15
         p = 10.*p
@@ -244,8 +275,6 @@ def TTURawToMMC(dpath,startdate,outpath):
 
         i=0
         j=0
-        subSampleByMean = False
-        dummyval=np.array(-999.000).astype(np.float32) 
         for k in range(u.shape[1]):  #For each line in the file
             if(subSampleByMean):
                 if (k%sampleStride == 0 and k > 0) or k == u.shape[1]-1:#Take the mean of the raw data over this sampleStride then compute fluctuations
@@ -321,11 +350,12 @@ def TTURawToMMC(dpath,startdate,outpath):
                     j = 0
                 else:
                     j=j+1
+
         for i in range(um.shape[1]):
             # write record header
             fout.write(record.format(
                 date=dateStr,
-                time=str(tmem[i][10:19]),
+                time=tmem[i].strftime(' %H:%M:%S'),
                 ustar=0.25607,
                 z0=0.1,
                 T0=-999,
