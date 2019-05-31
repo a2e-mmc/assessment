@@ -4,6 +4,8 @@ import sys
 import numpy as np
 import pandas as pd
 
+from mmctools.measurements.metmast import tilt_correction
+
 # templates for writing out data in the legacy MMC ASCII format
 from mmctools.mmcdata import header, record, datarow
 
@@ -117,7 +119,9 @@ def TTURawToMMC(dpath,startdate,outpath):
         outpath = os.path.join(outpath,outfilename)
     fout = open(outpath,'w')
 
-    #Write the MMC file-header metadata
+    #
+    # Write the MMC file-header metadata
+    #
     fout.write(header.format(
         institution='SNL',
         location='TTUTOWER',
@@ -188,36 +192,7 @@ def TTURawToMMC(dpath,startdate,outpath):
         th = t * (p00 / (100.0*p))**R_cp
 
         ### As of 4_15_19 JAS added Branko form of tilt correction from EOL description
-        # Tilt correction
-        for lvl in range(Nz):
-            a = reg_coefs[lvl][0]
-            b = reg_coefs[lvl][1]
-            c = reg_coefs[lvl][2]
-            tilt = tilts[lvl][0]
-            tiltaz = tilts[lvl][1]
-            #Wf = ( sin(tilt)*cos(tiltaz), sin(tilt)*sin(tiltaz), cos(tilt) )
-            wf1 = np.sin(tilt) * np.cos(tiltaz)
-            wf2 = np.sin(tilt) * np.sin(tiltaz)
-            wf3 = np.cos(tilt)
-            #U'f = ((cos(tilt), 0, -sin(tilt)*cos(tiltaz))
-            uf1 = np.cos(tilt)
-            uf2 = 0.
-            uf3 = -np.sin(tilt) * np.cos(tiltaz)
-            ufm = np.sqrt(uf1**2 + uf2**2 + uf3**2)
-            uf1 = uf1 / ufm
-            uf2 = uf2 / ufm
-            uf3 = uf3 / ufm
-            #vf = wf x uf 
-            vf1 = wf2 * uf3 - wf3 * uf2
-            vf2 = wf3 * uf1 - wf1 * uf3
-            vf3 = wf1 * uf2 - wf2 * uf1
-            ug = uf1 * u[lvl,:] + uf2 * v[lvl,:] + uf3 * (w[lvl,:] - a)
-            vg = vf1 * u[lvl,:] + vf2 * v[lvl,:] + vf3 * (w[lvl,:] - a)
-            wg = wf1 * u[lvl,:] + wf2 * v[lvl,:] + wf3 * (w[lvl,:] - a)
-            u[lvl,:] = ug
-            v[lvl,:] = vg
-            w[lvl,:] = wg
-        ### END Tilt Correction
+        u,v,w = tilt_correction(u,v,w,reg_coefs,tilts)
 
         # TODO: replace all of this 'subSampleByMean' code with # df.rolling().mean()
         if(subSampleByMean):
@@ -310,7 +285,9 @@ def TTURawToMMC(dpath,startdate,outpath):
         pm[:,:] = p[:,selected]
         rhm[:,:] = rh[:,selected]
 
+        #
         # now, write all the data
+        #
         for i in range(um.shape[1]):
             # write record header
             fout.write(record.format(
@@ -327,6 +304,7 @@ def TTURawToMMC(dpath,startdate,outpath):
                               ):
                 # write data row
                 fout.write(datarow.format(*allcols))
+
     fout.close()
     print("Done!")
 
