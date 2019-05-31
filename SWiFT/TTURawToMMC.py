@@ -110,6 +110,7 @@ def TTURawToMMC(dpath,startdate,outpath):
     rh=np.zeros((Nz,signalRawSamples))
     tmpu_sonic=np.zeros((Nz,1))
     tmpv_sonic=np.zeros((Nz,1))
+
     um=np.zeros((Nz,signalTargSamples))
     vm=np.zeros((Nz,signalTargSamples))
     wm=np.zeros((Nz,signalTargSamples))
@@ -197,13 +198,14 @@ def TTURawToMMC(dpath,startdate,outpath):
 #        head5 = f.readline()
 #        varnames = head5.split(",")
         ####Subsample or complete sample the raw data and store in named numpy arrays
-        sampleStride=int(sampleRateRaw/sampleRateTarg)
-        ufRaw=np.zeros((Nz,sampleStride))
-        vfRaw=np.zeros((Nz,sampleStride))
-        wfRaw=np.zeros((Nz,sampleStride))
-        tfRaw=np.zeros((Nz,sampleStride))
-        thfRaw=np.zeros((Nz,sampleStride))
-        pfRaw=np.zeros((Nz,sampleStride))
+        sampleStride = int(sampleRateRaw/sampleRateTarg)
+        if subSampleByMean:
+            ufRaw=np.zeros((Nz,sampleStride))
+            vfRaw=np.zeros((Nz,sampleStride))
+            wfRaw=np.zeros((Nz,sampleStride))
+            tfRaw=np.zeros((Nz,sampleStride))
+            thfRaw=np.zeros((Nz,sampleStride))
+            pfRaw=np.zeros((Nz,sampleStride))
 #        for k in range(filelines-5):  #For each line in the file
 #            aline = f.readline()
 #            varvalues = aline.split(",")
@@ -226,6 +228,7 @@ def TTURawToMMC(dpath,startdate,outpath):
         tStrt = tStop - 3600*sampleRateRaw
         print("tStrt,tStop = {:d},{:d}".format(tStrt,tStop))
         tmem = tme[tStrt:tStop:sampleStride]
+
         #A couple unit conversions on temperature(F->K) and pressure( 1 kPa to 10 mbars)
         t = (t - 32.)*5./9. + 273.15
         p = 10.*p
@@ -239,10 +242,10 @@ def TTURawToMMC(dpath,startdate,outpath):
 
         ### As of 4_15_19 JAS added Branko form of tilt correction from EOL description
         # Tilt correction
-        uv=[]
-        ut=[]
-        vt=[]
-        wt=[]
+#        uv=[]
+#        ut=[]
+#        vt=[]
+#        wt=[]
         for lvl in range(Nz):
             a = reg_coefs[lvl][0]
             b = reg_coefs[lvl][1]
@@ -275,9 +278,10 @@ def TTURawToMMC(dpath,startdate,outpath):
 
         i=0
         j=0
-        for k in range(u.shape[1]):  #For each line in the file
+        Nt = u.shape[1]
+        for k in range(Nt):  #For each line in the file
             if(subSampleByMean):
-                if (k%sampleStride == 0 and k > 0) or k == u.shape[1]-1:#Take the mean of the raw data over this sampleStride then compute fluctuations
+                if (k%sampleStride == 0 and k > 0) or k == Nt-1:#Take the mean of the raw data over this sampleStride then compute fluctuations
                     #print("k = {:d}: k-sampleStride = {:d}".foramt(k,k-sampleStride))
                     #Compute the means
                     um[:,i] = np.nanmean(u[:,k-sampleStride:k],axis=1)
@@ -322,34 +326,70 @@ def TTURawToMMC(dpath,startdate,outpath):
                     j = 0
                 else:
                     j = j + 1
-            else:  #subSampleByMean is False so just subSample
-                if (k%sampleStride == 0 and k > 0) or k == u.shape[1]-1:#Take the mean of the raw data over this sampleStride then compute fluctuations
-                    #print("k = {:d}: k-sampleStride = {:d}".format(k,k-sampleStride))
-                    #set the ith instance to be this sample
-                    um[:,i] = u[:,k]
-                    vm[:,i] = v[:,k]
-                    wm[:,i] = w[:,k]
-                    usm[:,i] = us[:,k]
-                    vcm[:,i] = vc[:,k]
-                    wdm[:,i] = wd[:,k]
-                    tsm[:,i] = ts[:,k]
-                    tm[:,i] = t[:,k]
-                    thm[:,i] = th[:,k]
-                    pm[:,i] = p[:,k]
-                    rhm[:,i] = rh[:,k]
-                    #Compute the auxilliary fluctuation products
-                    tkem[:,i] = dummyval
-                    tau11[:,i] = dummyval
-                    tau12[:,i] = dummyval
-                    tau13[:,i] = dummyval
-                    tau23[:,i] = dummyval
-                    tau22[:,i] = dummyval
-                    tau33[:,i] = dummyval
-                    hflux[:,i] = dummyval
-                    i = i + 1
-                    j = 0
-                else:
-                    j=j+1
+#            else:  #subSampleByMean is False so just subSample
+#                if (k%sampleStride == 0 and k > 0) or k == Nt-1:
+#                    # Take the mean of the raw data over this sampleStride
+#                    # then compute fluctuations
+#                    #print("k = {:d}: k-sampleStride = {:d}".format(k,k-sampleStride))
+#                    #set the ith instance to be this sample
+#                    um[:,i] = u[:,k]
+#                    vm[:,i] = v[:,k]
+#                    wm[:,i] = w[:,k]
+#                    usm[:,i] = us[:,k]
+#                    vcm[:,i] = vc[:,k]
+#                    wdm[:,i] = wd[:,k]
+#                    tsm[:,i] = ts[:,k]
+#                    tm[:,i] = t[:,k]
+#                    thm[:,i] = th[:,k]
+#                    pm[:,i] = p[:,k]
+#                    rhm[:,i] = rh[:,k]
+#                    #Compute the auxilliary fluctuation products
+#                    tkem[:,i] = dummyval
+#                    tau11[:,i] = dummyval
+#                    tau12[:,i] = dummyval
+#                    tau13[:,i] = dummyval
+#                    tau23[:,i] = dummyval
+#                    tau22[:,i] = dummyval
+#                    tau33[:,i] = dummyval
+#                    hflux[:,i] = dummyval
+#                    i = i + 1
+#                    j = 0
+#                else:
+#                    j=j+1
+
+        selected = slice(sampleStride,Nt,sampleStride)
+        um[:,:-1] = u[:,selected]
+        vm[:,:-1] = v[:,selected]
+        wm[:,:-1] = w[:,selected]
+        usm[:,:-1] = us[:,selected]
+        vcm[:,:-1] = vc[:,selected]
+        wdm[:,:-1] = wd[:,selected]
+        tsm[:,:-1] = ts[:,selected]
+        tm[:,:-1] = t[:,selected]
+        thm[:,:-1] = th[:,selected]
+        pm[:,:-1] = p[:,selected]
+        rhm[:,:-1] = rh[:,selected]
+
+        um[:,-1] = u[:,-1]
+        vm[:,-1] = v[:,-1]
+        wm[:,-1] = w[:,-1]
+        usm[:,-1] = us[:,-1]
+        vcm[:,-1] = vc[:,-1]
+        wdm[:,-1] = wd[:,-1]
+        tsm[:,-1] = ts[:,-1]
+        tm[:,-1] = t[:,-1]
+        thm[:,-1] = th[:,-1]
+        pm[:,-1] = p[:,-1]
+        rhm[:,-1] = rh[:,-1]
+
+        tkem[:,:] = dummyval
+        tau11[:,:] = dummyval
+        tau12[:,:] = dummyval
+        tau13[:,:] = dummyval
+        tau23[:,:] = dummyval
+        tau22[:,:] = dummyval
+        tau33[:,:] = dummyval
+        hflux[:,:] = dummyval
 
         for i in range(um.shape[1]):
             # write record header
