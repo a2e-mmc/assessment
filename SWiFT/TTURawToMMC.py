@@ -357,30 +357,44 @@ def TTURawToMMC(dpath,startdate,outpath):
 #                else:
 #                    j=j+1
 
-        selected = slice(sampleStride,Nt,sampleStride)
-        um[:,:-1] = u[:,selected]
-        vm[:,:-1] = v[:,selected]
-        wm[:,:-1] = w[:,selected]
-        usm[:,:-1] = us[:,selected]
-        vcm[:,:-1] = vc[:,selected]
-        wdm[:,:-1] = wd[:,selected]
-        tsm[:,:-1] = ts[:,selected]
-        tm[:,:-1] = t[:,selected]
-        thm[:,:-1] = th[:,selected]
-        pm[:,:-1] = p[:,selected]
-        rhm[:,:-1] = rh[:,selected]
-
-        um[:,-1] = u[:,-1]
-        vm[:,-1] = v[:,-1]
-        wm[:,-1] = w[:,-1]
-        usm[:,-1] = us[:,-1]
-        vcm[:,-1] = vc[:,-1]
-        wdm[:,-1] = wd[:,-1]
-        tsm[:,-1] = ts[:,-1]
-        tm[:,-1] = t[:,-1]
-        thm[:,-1] = th[:,-1]
-        pm[:,-1] = p[:,-1]
-        rhm[:,-1] = rh[:,-1]
+        # To match output by JAS' code
+        #selected = slice(sampleStride,Nt,sampleStride)
+        #um[:,:-1] = u[:,selected]
+        #vm[:,:-1] = v[:,selected]
+        #wm[:,:-1] = w[:,selected]
+        #usm[:,:-1] = us[:,selected]
+        #vcm[:,:-1] = vc[:,selected]
+        #wdm[:,:-1] = wd[:,selected]
+        #tsm[:,:-1] = ts[:,selected]
+        #tm[:,:-1] = t[:,selected]
+        #thm[:,:-1] = th[:,selected]
+        #pm[:,:-1] = p[:,selected]
+        #rhm[:,:-1] = rh[:,selected]
+        #um[:,-1] = u[:,-1]
+        #vm[:,-1] = v[:,-1]
+        #wm[:,-1] = w[:,-1]
+        #usm[:,-1] = us[:,-1]
+        #vcm[:,-1] = vc[:,-1]
+        #wdm[:,-1] = wd[:,-1]
+        #tsm[:,-1] = ts[:,-1]
+        #tm[:,-1] = t[:,-1]
+        #thm[:,-1] = th[:,-1]
+        #pm[:,-1] = p[:,-1]
+        #rhm[:,-1] = rh[:,-1]
+        
+        #selected = slice(sampleStride-1,Nt,sampleStride) # 1Hz, with 980ms offset
+        selected = slice(0,Nt,sampleStride) # 1Hz, with 0ms offset
+        um[:,:] = u[:,selected]
+        vm[:,:] = v[:,selected]
+        wm[:,:] = w[:,selected]
+        usm[:,:] = us[:,selected]
+        vcm[:,:] = vc[:,selected]
+        wdm[:,:] = wd[:,selected]
+        tsm[:,:] = ts[:,selected]
+        tm[:,:] = t[:,selected]
+        thm[:,:] = th[:,selected]
+        pm[:,:] = p[:,selected]
+        rhm[:,:] = rh[:,selected]
 
         tkem[:,:] = dummyval
         tau11[:,:] = dummyval
