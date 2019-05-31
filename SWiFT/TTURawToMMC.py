@@ -70,10 +70,12 @@ def TTURawToMMC(dpath,startdate,outpath):
     secondsPerMinute = 60
     signalRawSamples = sampleRateRaw*secondsPerMinute*minutesPerFile
     signalTargSamples = sampleRateTarg*secondsPerMinute*minutesPerFile
+    sampleStride = int(sampleRateRaw/sampleRateTarg)
 
     sampletimes = []
 
     #declare and initialize mean arrays to zero
+    # TODO: can rewrite code without these declared arrays
     um = np.zeros((Nz,signalTargSamples))
     vm = np.zeros((Nz,signalTargSamples))
     wm = np.zeros((Nz,signalTargSamples))
@@ -137,22 +139,25 @@ def TTURawToMMC(dpath,startdate,outpath):
     ### For each hourly 50Hz file of TTU data...
     for starttime,endtime in zip(starttimes,endtimes):
         startdate = startdate.replace(hour=starttime)
-        filename = startdate.strftime(dap_filenames) # e.g., 'tower.z01.00.20131108.000000.ttu200m.dat'
+        # get dap filename for current start date
+        # e.g., 'tower.z01.00.20131108.000000.ttu200m.dat'
+        filename = startdate.strftime(dap_filenames)
         fpath = os.path.join(dpath,filename)
 
         # read data file, which is in wide format, has column headers in the 5th
         # row (irow=4), and datetimes in the first column (icol=0). Column
         # names have variables changing fastest, then heights, i.e.,
         #   unorth_3ft,vwest_3ft,...,unorth_8ft,vwest_8ft,...
-        df = pd.read_csv(fpath,skiprows=5,header=None,parse_dates={'datetime':[0]})
+        df = pd.read_csv(fpath,skiprows=5,header=None,
+                         parse_dates={'datetime':[0]})
         df = df.set_index('datetime')
         df.columns = datacolumns
-        df = df.reorder_levels([1,0],axis=1).sort_index(axis=1) # now columns have heights changing fastest
-
-        # now time-height data may be selected by column name
-        # e.g., df['unorth'] has array data with shape (Nt,Nz)
+        df = df.reorder_levels([1,0],axis=1).sort_index(axis=1)
+        
+        # now columns have heights changing fastest
+        # - time-height data may be selected by column name
+        #   e.g., df['unorth'] has array data with shape (Nt,Nz)
         # - note: for each raw TTU u_zonal = vsonic, and v_meridional = -usonic
-        sampletimes += list(df.index) # append timestamps
         u = df['vwest'].values.T
         v = -df['unorth'].values.T
         w = df['w'].values.T
@@ -164,23 +169,16 @@ def TTURawToMMC(dpath,startdate,outpath):
         p = df['p'].values.T
         rh = df['rh'].values.T
 
-        assert u.shape == (Nz,signalRawSamples)
-
-        ####Subsample or complete sample the raw data and store in named numpy arrays
-        sampleStride = int(sampleRateRaw/sampleRateTarg)
-        if subSampleByMean:
-            ufRaw = np.zeros((Nz,sampleStride))
-            vfRaw = np.zeros((Nz,sampleStride))
-            wfRaw = np.zeros((Nz,sampleStride))
-            tfRaw = np.zeros((Nz,sampleStride))
-            thfRaw = np.zeros((Nz,sampleStride))
-            pfRaw = np.zeros((Nz,sampleStride))
+        sampletimes += list(df.index) # append new timestamps
         tStop = len(sampletimes)
         tStrt = tStop - 3600*sampleRateRaw
         print("tStrt,tStop = {:d},{:d}".format(tStrt,tStop))
         outputtimes = sampletimes[tStrt:tStop:sampleStride]
 
-        #A couple unit conversions on temperature(F->K) and pressure( 1 kPa to 10 mbars)
+        # original code written for height-time arrays instead of height-time
+        assert u.shape == (Nz,signalRawSamples)
+
+        # unit conversions on temperature(F->K) and pressure( 1 kPa to 10 mbars)
         t = (t - 32.)*5./9. + 273.15
         p = 10.*p
         R = 287.04
@@ -195,7 +193,13 @@ def TTURawToMMC(dpath,startdate,outpath):
         u,v,w = tilt_correction(u,v,w,reg_coefs,tilts)
 
         # TODO: replace all of this 'subSampleByMean' code with # df.rolling().mean()
-        if(subSampleByMean):
+        if(subSampleByMean):# {{{
+            ufRaw = np.zeros((Nz,sampleStride))
+            vfRaw = np.zeros((Nz,sampleStride))
+            wfRaw = np.zeros((Nz,sampleStride))
+            tfRaw = np.zeros((Nz,sampleStride))
+            thfRaw = np.zeros((Nz,sampleStride))
+            pfRaw = np.zeros((Nz,sampleStride))
             i=0
             j=0
             for k in range(signalRawSamples):  #For each line in the file
@@ -239,11 +243,11 @@ def TTURawToMMC(dpath,startdate,outpath):
                     i = i + 1
                     j = 0
                 else:
-                    j = j + 1
+                    j = j + 1# }}}
 
         # To match output intervals in original code
         # e.g., for N=180000, indices=[50,100,150,...,179900,179950,179999]
-        #selected = slice(sampleStride,signalRawSamples,sampleStride)
+        #selected = slice(sampleStride,signalRawSamples,sampleStride)# {{{
         #um[:,:-1] = u[:,selected]
         #vm[:,:-1] = v[:,selected]
         #wm[:,:-1] = w[:,selected]
@@ -265,14 +269,16 @@ def TTURawToMMC(dpath,startdate,outpath):
         #tm[:,-1] = t[:,-1]
         #thm[:,-1] = th[:,-1]
         #pm[:,-1] = p[:,-1]
-        #rhm[:,-1] = rh[:,-1]
+        #rhm[:,-1] = rh[:,-1]# }}}
         
+        # 1-Hz output, but has a 980ms offset
         # indices=[49,99,149,...,179999]
-        #selected = slice(sampleStride-1,signalRawSamples,sampleStride) # 1Hz, with 980ms offset
+        #selected = slice(sampleStride-1,signalRawSamples,sampleStride)
 
+        # 1-Hz output
         # indices=[0,50,100,...,179900,179950]
         # TODO: resample with pd.resample() to guarantee sampling consistency
-        selected = slice(0,signalRawSamples,sampleStride) # 1Hz, with 0ms offset
+        selected = slice(0,signalRawSamples,sampleStride)
         um[:,:] = u[:,selected]
         vm[:,:] = v[:,selected]
         wm[:,:] = w[:,selected]
