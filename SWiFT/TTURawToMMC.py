@@ -66,23 +66,9 @@ def TTURawToMMC(dpath,startdate,outpath):
     signalRawSamples = sampleRateRaw*secondsPerMinute*minutesPerFile
     signalTargSamples = sampleRateTarg*secondsPerMinute*minutesPerFile
 
-    #Declare a few lists for later use as indices, etc.
     sampletimes = []
-    #declare and initialize to zero, named numpy arrays used here 
-    u = np.zeros((Nz,signalRawSamples))
-    v = np.zeros((Nz,signalRawSamples))
-    w = np.zeros((Nz,signalRawSamples))
-    us = np.zeros((Nz,signalRawSamples))
-    vc = np.zeros((Nz,signalRawSamples))
-    wd = np.zeros((Nz,signalRawSamples))
-    ts = np.zeros((Nz,signalRawSamples))
-    t = np.zeros((Nz,signalRawSamples))
-    th = np.zeros((Nz,signalRawSamples))
-    p = np.zeros((Nz,signalRawSamples))
-    rh = np.zeros((Nz,signalRawSamples))
-    tmpu_sonic = np.zeros((Nz,1))
-    tmpv_sonic = np.zeros((Nz,1))
 
+    #declare and initialize mean arrays to zero
     um = np.zeros((Nz,signalTargSamples))
     vm = np.zeros((Nz,signalTargSamples))
     wm = np.zeros((Nz,signalTargSamples))
