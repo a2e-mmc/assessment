@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 ##### Parse raw SWiFT TTU tower data by the hour for 24 hours...
 import os
 import sys
