@@ -67,7 +67,7 @@ def TTURawToMMC(dpath,startdate,outpath):
     signalTargSamples = sampleRateTarg*secondsPerMinute*minutesPerFile
 
     #Declare a few lists for later use as indices, etc.
-    tme = []
+    sampletimes = []
     #declare and initialize to zero, named numpy arrays used here 
     u = np.zeros((Nz,signalRawSamples))
     v = np.zeros((Nz,signalRawSamples))
@@ -149,7 +149,7 @@ def TTURawToMMC(dpath,startdate,outpath):
         # now time-height data may be selected by column name
         # e.g., df['unorth'] has array data with shape (Nt,Nz)
         # - note: for each raw TTU u_zonal = vsonic, and v_meridional = -usonic
-        tme += list(df.index) # append timestamps
+        sampletimes += list(df.index) # append timestamps
         u = df['vwest'].values.T
         v = -df['unorth'].values.T
         w = df['w'].values.T
@@ -170,10 +170,10 @@ def TTURawToMMC(dpath,startdate,outpath):
             tfRaw=np.zeros((Nz,sampleStride))
             thfRaw=np.zeros((Nz,sampleStride))
             pfRaw=np.zeros((Nz,sampleStride))
-        tStop = len(tme)
+        tStop = len(sampletimes)
         tStrt = tStop - 3600*sampleRateRaw
         print("tStrt,tStop = {:d},{:d}".format(tStrt,tStop))
-        tmem = tme[tStrt:tStop:sampleStride]
+        outputtimes = sampletimes[tStrt:tStop:sampleStride]
 
         #A couple unit conversions on temperature(F->K) and pressure( 1 kPa to 10 mbars)
         t = (t - 32.)*5./9. + 273.15
@@ -317,7 +317,7 @@ def TTURawToMMC(dpath,startdate,outpath):
             # write record header
             fout.write(record.format(
                 date=dateStr,
-                time=tmem[i].strftime(' %H:%M:%S'),
+                time=outputtimes[i].strftime(' %H:%M:%S'),
                 ustar=0.25607,
                 z0=0.1,
                 T0=dummyval,
