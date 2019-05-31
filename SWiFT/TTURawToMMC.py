@@ -23,7 +23,7 @@ varnames = ['unorth','vwest','w','ustream','vcross','wdir','tsonic','t','p','rh'
 
 # output options
 subSampleByMean = False
-dummyval = np.array(-999.000).astype(np.float32) 
+dummyval = -999 # for missing values
 
 #JAS 1108-1111, 4-day tilt-corrected
 reg_coefs = [[-0.02047518907375512, -0.011649366757767144, -0.005668625739156408],
@@ -50,12 +50,6 @@ tilts = [[0.012954624102180665, 0.4528733026774165],
 
 #==============================================================================
 
-#def file_len(fname):
-#    with open(fname) as f:
-#        for i, l in enumerate(f):
-#            pass
-#    return i + 1
-
 def TTURawToMMC(dpath,startdate,outpath):
     """Read files with 'dap_filenames' format corresponding to
     'startdate' from 'dpath', write out MMC data to 'outpath', which
@@ -74,69 +68,47 @@ def TTURawToMMC(dpath,startdate,outpath):
 
     #Declare a few lists for later use as indices, etc.
     tme = []
-#    tme=list()
-#    iu=[1,11,21,31,41,51,61,71,81,91]
-#    iv=list()
-#    iw=list()
-#    ius=list()
-#    ivc=list()
-#    iwd=list()
-#    its=list()
-#    it=list()
-#    ip=list()
-#    irh=list()
-#    for i in range(Nlevels):     #Define indices for each data feature over 10 levels of sonics
-#        iv.append(iu[i]+1)
-#        iw.append(iu[i]+2)
-#        ius.append(iu[i]+3)
-#        ivc.append(iu[i]+4)
-#        iwd.append(iu[i]+5)
-#        its.append(iu[i]+6)
-#        it.append(iu[i]+7)
-#        ip.append(iu[i]+8)
-#        irh.append(iu[i]+9)
-   
     #declare and initialize to zero, named numpy arrays used here 
-    u=np.zeros((Nz,signalRawSamples))
-    v=np.zeros((Nz,signalRawSamples))
-    w=np.zeros((Nz,signalRawSamples))
-    us=np.zeros((Nz,signalRawSamples))
-    vc=np.zeros((Nz,signalRawSamples))
-    wd=np.zeros((Nz,signalRawSamples))
-    ts=np.zeros((Nz,signalRawSamples))
-    t=np.zeros((Nz,signalRawSamples))
-    th=np.zeros((Nz,signalRawSamples))
-    p=np.zeros((Nz,signalRawSamples))
-    rh=np.zeros((Nz,signalRawSamples))
-    tmpu_sonic=np.zeros((Nz,1))
-    tmpv_sonic=np.zeros((Nz,1))
+    u = np.zeros((Nz,signalRawSamples))
+    v = np.zeros((Nz,signalRawSamples))
+    w = np.zeros((Nz,signalRawSamples))
+    us = np.zeros((Nz,signalRawSamples))
+    vc = np.zeros((Nz,signalRawSamples))
+    wd = np.zeros((Nz,signalRawSamples))
+    ts = np.zeros((Nz,signalRawSamples))
+    t = np.zeros((Nz,signalRawSamples))
+    th = np.zeros((Nz,signalRawSamples))
+    p = np.zeros((Nz,signalRawSamples))
+    rh = np.zeros((Nz,signalRawSamples))
+    tmpu_sonic = np.zeros((Nz,1))
+    tmpv_sonic = np.zeros((Nz,1))
 
-    um=np.zeros((Nz,signalTargSamples))
-    vm=np.zeros((Nz,signalTargSamples))
-    wm=np.zeros((Nz,signalTargSamples))
-    usm=np.zeros((Nz,signalTargSamples))
-    vcm=np.zeros((Nz,signalTargSamples))
-    wdm=np.zeros((Nz,signalTargSamples))
-    tsm=np.zeros((Nz,signalTargSamples))
-    tm=np.zeros((Nz,signalTargSamples))
-    thm=np.zeros((Nz,signalTargSamples))
-    pm=np.zeros((Nz,signalTargSamples))
-    rhm=np.zeros((Nz,signalTargSamples))
-    uf=np.zeros((Nz,signalTargSamples))
-    vf=np.zeros((Nz,signalTargSamples))
-    wf=np.zeros((Nz,signalTargSamples))
-    tf=np.zeros((Nz,signalTargSamples))
-    thf=np.zeros((Nz,signalTargSamples))
-    pf=np.zeros((Nz,signalTargSamples))
-    auxf=np.zeros((Nz,signalTargSamples))
-    tkem=np.zeros((Nz,signalTargSamples))
-    tau11=np.zeros((Nz,signalTargSamples))
-    tau12=np.zeros((Nz,signalTargSamples))
-    tau13=np.zeros((Nz,signalTargSamples))
-    tau22=np.zeros((Nz,signalTargSamples))
-    tau23=np.zeros((Nz,signalTargSamples))
-    tau33=np.zeros((Nz,signalTargSamples))
-    hflux=np.zeros((Nz,signalTargSamples)) 
+    um = np.zeros((Nz,signalTargSamples))
+    vm = np.zeros((Nz,signalTargSamples))
+    wm = np.zeros((Nz,signalTargSamples))
+    usm = np.zeros((Nz,signalTargSamples))
+    vcm = np.zeros((Nz,signalTargSamples))
+    wdm = np.zeros((Nz,signalTargSamples))
+    tsm = np.zeros((Nz,signalTargSamples))
+    tm = np.zeros((Nz,signalTargSamples))
+    thm = np.zeros((Nz,signalTargSamples))
+    pm = np.zeros((Nz,signalTargSamples))
+    rhm = np.zeros((Nz,signalTargSamples))
+    uf = np.zeros((Nz,signalTargSamples))
+    vf = np.zeros((Nz,signalTargSamples))
+    wf = np.zeros((Nz,signalTargSamples))
+    tf = np.zeros((Nz,signalTargSamples))
+    thf = np.zeros((Nz,signalTargSamples))
+    pf = np.zeros((Nz,signalTargSamples))
+    auxf = np.zeros((Nz,signalTargSamples))
+    tkem = np.zeros((Nz,signalTargSamples))
+    tau11 = np.zeros((Nz,signalTargSamples))
+    tau12 = np.zeros((Nz,signalTargSamples))
+    tau13 = np.zeros((Nz,signalTargSamples))
+    tau22 = np.zeros((Nz,signalTargSamples))
+    tau23 = np.zeros((Nz,signalTargSamples))
+    tau33 = np.zeros((Nz,signalTargSamples))
+    hflux = np.zeros((Nz,signalTargSamples)) 
  
     #Open the output file
     if os.path.isdir(outpath):
@@ -164,7 +136,6 @@ def TTURawToMMC(dpath,startdate,outpath):
         startdate = startdate.replace(hour=starttime)
         filename = startdate.strftime(dap_filenames) # e.g., 'tower.z01.00.20131108.000000.ttu200m.dat'
         fpath = os.path.join(dpath,filename)
-#        filelines = file_len(fpath)
 
         # read data file, which is in wide format, has column headers in the 5th
         # row (irow=4), and datetimes in the first column (icol=0). Column
@@ -190,13 +161,6 @@ def TTURawToMMC(dpath,startdate,outpath):
         p = df['p'].values.T
         rh = df['rh'].values.T
 
-#        f = open(fpath,'r')
-#        head1 = f.readline()
-#        head2 = f.readline()
-#        head3 = f.readline()
-#        head4 = f.readline()
-#        head5 = f.readline()
-#        varnames = head5.split(",")
         ####Subsample or complete sample the raw data and store in named numpy arrays
         sampleStride = int(sampleRateRaw/sampleRateTarg)
         if subSampleByMean:
@@ -206,24 +170,6 @@ def TTURawToMMC(dpath,startdate,outpath):
             tfRaw=np.zeros((Nz,sampleStride))
             thfRaw=np.zeros((Nz,sampleStride))
             pfRaw=np.zeros((Nz,sampleStride))
-#        for k in range(filelines-5):  #For each line in the file
-#            aline = f.readline()
-#            varvalues = aline.split(",")
-#            tme.append(varvalues[0])
-#            #Note for each raw TTU u_zonal = vsonic, and v_meridional = -usonic
-#            tmpu_sonic = [ varvalues[l] for l in iv] 
-#            tmpv_sonic = [ varvalues[l] for l in iu]
-#            u[:,k] = tmpu_sonic
-#            v[:,k] = tmpv_sonic
-#            v[:,k] = -v[:,k]
-#            w[:,k] = [ varvalues[l] for l in iw]
-#            us[:,k] = [ varvalues[l] for l in ius]
-#            vc[:,k] = [ varvalues[l] for l in ivc]
-#            wd[:,k] = [ varvalues[l] for l in iwd]
-#            ts[:,k] = [ varvalues[l] for l in its]
-#            t[:,k] = [ varvalues[l] for l in it]
-#            p[:,k] = [ varvalues[l] for l in ip]
-#            rh[:,k] = [ varvalues[l] for l in irh]
         tStop = len(tme)
         tStrt = tStop - 3600*sampleRateRaw
         print("tStrt,tStop = {:d},{:d}".format(tStrt,tStop))
@@ -242,10 +188,6 @@ def TTURawToMMC(dpath,startdate,outpath):
 
         ### As of 4_15_19 JAS added Branko form of tilt correction from EOL description
         # Tilt correction
-#        uv=[]
-#        ut=[]
-#        vt=[]
-#        wt=[]
         for lvl in range(Nz):
             a = reg_coefs[lvl][0]
             b = reg_coefs[lvl][1]
@@ -282,7 +224,6 @@ def TTURawToMMC(dpath,startdate,outpath):
         for k in range(Nt):  #For each line in the file
             if(subSampleByMean):
                 if (k%sampleStride == 0 and k > 0) or k == Nt-1:#Take the mean of the raw data over this sampleStride then compute fluctuations
-                    #print("k = {:d}: k-sampleStride = {:d}".foramt(k,k-sampleStride))
                     #Compute the means
                     um[:,i] = np.nanmean(u[:,k-sampleStride:k],axis=1)
                     vm[:,i] = np.nanmean(v[:,k-sampleStride:k],axis=1)
@@ -295,8 +236,6 @@ def TTURawToMMC(dpath,startdate,outpath):
                     thm[:,i] = np.nanmean(th[:,k-sampleStride:k],axis=1)
                     pm[:,i] = np.nanmean(p[:,k-sampleStride:k],axis=1)
                     rhm[:,i] = np.nanmean(rh[:,k-sampleStride:k],axis=1)
-                    #print(i,um[:,i])        
-                    #print "       TIME:"+str(tme[k][10:19])+" um[:,i]="+str(um[:,i])+" vm[:,i]="+str(vm[:,i])
                     #Compute the core variable fluctuations 
                     for l in range(Nz):
                         ufRaw[l,:] = np.subtract(u[l,k-sampleStride:k],um[l,i])
@@ -305,7 +244,6 @@ def TTURawToMMC(dpath,startdate,outpath):
                         tfRaw[l,:] = np.subtract(t[l,k-sampleStride:k],tm[l,i])
                         thfRaw[l,:] = np.subtract(t[l,k-sampleStride:k],thm[l,i])
                         pfRaw[l,:] = np.subtract(p[l,k-sampleStride:k],pm[l,i])
-                    #print "uff.shape : ",ufRaw.shape
                     uf[:,i] = np.nanmean(ufRaw,axis=1)
                     vf[:,i] = np.nanmean(vfRaw,axis=1)
                     wf[:,i] = np.nanmean(wfRaw,axis=1)
@@ -326,36 +264,6 @@ def TTURawToMMC(dpath,startdate,outpath):
                     j = 0
                 else:
                     j = j + 1
-#            else:  #subSampleByMean is False so just subSample
-#                if (k%sampleStride == 0 and k > 0) or k == Nt-1:
-#                    # Take the mean of the raw data over this sampleStride
-#                    # then compute fluctuations
-#                    #print("k = {:d}: k-sampleStride = {:d}".format(k,k-sampleStride))
-#                    #set the ith instance to be this sample
-#                    um[:,i] = u[:,k]
-#                    vm[:,i] = v[:,k]
-#                    wm[:,i] = w[:,k]
-#                    usm[:,i] = us[:,k]
-#                    vcm[:,i] = vc[:,k]
-#                    wdm[:,i] = wd[:,k]
-#                    tsm[:,i] = ts[:,k]
-#                    tm[:,i] = t[:,k]
-#                    thm[:,i] = th[:,k]
-#                    pm[:,i] = p[:,k]
-#                    rhm[:,i] = rh[:,k]
-#                    #Compute the auxilliary fluctuation products
-#                    tkem[:,i] = dummyval
-#                    tau11[:,i] = dummyval
-#                    tau12[:,i] = dummyval
-#                    tau13[:,i] = dummyval
-#                    tau23[:,i] = dummyval
-#                    tau22[:,i] = dummyval
-#                    tau33[:,i] = dummyval
-#                    hflux[:,i] = dummyval
-#                    i = i + 1
-#                    j = 0
-#                else:
-#                    j=j+1
 
         # To match output by JAS' code
         #selected = slice(sampleStride,Nt,sampleStride)
@@ -412,8 +320,8 @@ def TTURawToMMC(dpath,startdate,outpath):
                 time=tmem[i].strftime(' %H:%M:%S'),
                 ustar=0.25607,
                 z0=0.1,
-                T0=-999,
-                qwall=-999,
+                T0=dummyval,
+                qwall=dummyval,
             ))
             for allcols in zip(z,um[:,i],vm[:,i],wm[:,i],thm[:,i],pm[:,i],
                                tkem[:,i], tau11[:,i], tau12[:,i], tau13[:,i],
