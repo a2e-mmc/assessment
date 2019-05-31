@@ -7,6 +7,9 @@ import pandas as pd
 # templates for writing out data in the legacy MMC ASCII format
 from mmctools.mmcdata import header, record, datarow
 
+#==============================================================================
+# Information specific to TTU site
+
 # measurement locations
 ttu_lat,ttu_lon = 33.6105,-102.0505
 ftlevels = [3,8,13,33,55,155,245,382,519,656] # sonic heights [ft]
@@ -96,6 +99,16 @@ def TTURawToMMC(dpath,startdate,outpath):
     tau33 = np.zeros((Nz,signalTargSamples))
     hflux = np.zeros((Nz,signalTargSamples)) 
  
+    # these fields were not sampled
+    tkem[:] = dummyval
+    tau11[:] = dummyval
+    tau12[:] = dummyval
+    tau13[:] = dummyval
+    tau23[:] = dummyval
+    tau22[:] = dummyval
+    tau33[:] = dummyval
+    hflux[:] = dummyval
+
     #Open the output file
     if os.path.isdir(outpath):
         # if we got an output directory, generate default filename and tack it
@@ -147,15 +160,17 @@ def TTURawToMMC(dpath,startdate,outpath):
         p = df['p'].values.T
         rh = df['rh'].values.T
 
+        assert u.shape == (Nz,signalRawSamples)
+
         ####Subsample or complete sample the raw data and store in named numpy arrays
         sampleStride = int(sampleRateRaw/sampleRateTarg)
         if subSampleByMean:
-            ufRaw=np.zeros((Nz,sampleStride))
-            vfRaw=np.zeros((Nz,sampleStride))
-            wfRaw=np.zeros((Nz,sampleStride))
-            tfRaw=np.zeros((Nz,sampleStride))
-            thfRaw=np.zeros((Nz,sampleStride))
-            pfRaw=np.zeros((Nz,sampleStride))
+            ufRaw = np.zeros((Nz,sampleStride))
+            vfRaw = np.zeros((Nz,sampleStride))
+            wfRaw = np.zeros((Nz,sampleStride))
+            tfRaw = np.zeros((Nz,sampleStride))
+            thfRaw = np.zeros((Nz,sampleStride))
+            pfRaw = np.zeros((Nz,sampleStride))
         tStop = len(sampletimes)
         tStrt = tStop - 3600*sampleRateRaw
         print("tStrt,tStop = {:d},{:d}".format(tStrt,tStop))
@@ -170,7 +185,7 @@ def TTURawToMMC(dpath,startdate,outpath):
         R_cp = R/cp
         gamma = cp/cv
         p00 = 1.0e5 #(Pa)
-        th = np.multiply(t,np.power(p00/(100.0*p),R_cp))
+        th = t * (p00 / (100.0*p))**R_cp
 
         ### As of 4_15_19 JAS added Branko form of tilt correction from EOL description
         # Tilt correction
@@ -204,12 +219,12 @@ def TTURawToMMC(dpath,startdate,outpath):
             w[lvl,:] = wg
         ### END Tilt Correction
 
-        i=0
-        j=0
-        Nt = u.shape[1]
-        for k in range(Nt):  #For each line in the file
-            if(subSampleByMean):
-                if (k%sampleStride == 0 and k > 0) or k == Nt-1:#Take the mean of the raw data over this sampleStride then compute fluctuations
+        # TODO: replace all of this 'subSampleByMean' code with # df.rolling().mean()
+        if(subSampleByMean):
+            i=0
+            j=0
+            for k in range(signalRawSamples):  #For each line in the file
+                if (k%sampleStride == 0 and k > 0) or k == signalRawSamples-1:#Take the mean of the raw data over this sampleStride then compute fluctuations
                     #Compute the means
                     um[:,i] = np.nanmean(u[:,k-sampleStride:k],axis=1)
                     vm[:,i] = np.nanmean(v[:,k-sampleStride:k],axis=1)
@@ -251,8 +266,9 @@ def TTURawToMMC(dpath,startdate,outpath):
                 else:
                     j = j + 1
 
-        # To match output by JAS' code
-        #selected = slice(sampleStride,Nt,sampleStride)
+        # To match output intervals in original code
+        # e.g., for N=180000, indices=[50,100,150,...,179900,179950,179999]
+        #selected = slice(sampleStride,signalRawSamples,sampleStride)
         #um[:,:-1] = u[:,selected]
         #vm[:,:-1] = v[:,selected]
         #wm[:,:-1] = w[:,selected]
@@ -276,8 +292,12 @@ def TTURawToMMC(dpath,startdate,outpath):
         #pm[:,-1] = p[:,-1]
         #rhm[:,-1] = rh[:,-1]
         
-        #selected = slice(sampleStride-1,Nt,sampleStride) # 1Hz, with 980ms offset
-        selected = slice(0,Nt,sampleStride) # 1Hz, with 0ms offset
+        # indices=[49,99,149,...,179999]
+        #selected = slice(sampleStride-1,signalRawSamples,sampleStride) # 1Hz, with 980ms offset
+
+        # indices=[0,50,100,...,179900,179950]
+        # TODO: resample with pd.resample() to guarantee sampling consistency
+        selected = slice(0,signalRawSamples,sampleStride) # 1Hz, with 0ms offset
         um[:,:] = u[:,selected]
         vm[:,:] = v[:,selected]
         wm[:,:] = w[:,selected]
@@ -290,15 +310,7 @@ def TTURawToMMC(dpath,startdate,outpath):
         pm[:,:] = p[:,selected]
         rhm[:,:] = rh[:,selected]
 
-        tkem[:,:] = dummyval
-        tau11[:,:] = dummyval
-        tau12[:,:] = dummyval
-        tau13[:,:] = dummyval
-        tau23[:,:] = dummyval
-        tau22[:,:] = dummyval
-        tau33[:,:] = dummyval
-        hflux[:,:] = dummyval
-
+        # now, write all the data
         for i in range(um.shape[1]):
             # write record header
             fout.write(record.format(
