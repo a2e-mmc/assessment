@@ -159,6 +159,7 @@ def TTURawToMMC(dpath,startdate,outpath):
         # - time-height data may be selected by column name
         #   e.g., df['unorth'] has array data with shape (Nt,Nz)
         # - note: for each raw TTU u_zonal = vsonic, and v_meridional = -usonic
+        # - note: the remainder of this function assumes arrays have dimensions (height,time)
         u = df['vwest'].values.T
         v = -df['unorth'].values.T
         w = df['w'].values.T
@@ -191,7 +192,11 @@ def TTURawToMMC(dpath,startdate,outpath):
         th = t * (p00 / (100.0*p))**R_cp
 
         ### As of 4_15_19 JAS added Branko form of tilt correction from EOL description
-        u,v,w = tilt_correction(u,v,w,reg_coefs,tilts)
+        u,v,w = tilt_correction(u.T,v.T,w.T,reg_coefs,tilts)
+        # - note: the remainder of this function assumes arrays have dimensions (height,time)
+        u = u.T
+        v = v.T
+        w = w.T
 
         # TODO: replace all of this 'subSampleByMean' code with # df.rolling().mean()
         if(subSampleByMean):# {{{
