@@ -1,0 +1,9 @@
+# certificates from dap-py
+.cert
+
+# python/jupyter stuff
+.ipynb_checkpoints
+__pycache__
+
+# Mac stuff
+.DS_Store
