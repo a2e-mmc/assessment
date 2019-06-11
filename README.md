@@ -10,5 +10,5 @@ The contents of this repository include:
 
 The structure of this repository (and the parent `a2e-mmc` organization) is as follows:
 
-![a2e-mmc github organizational structure](https://github.com/ewquon/assessment/raw/dev/a2e-mmc_org_structure.png)
+![alt text](a2e-mmc_org_structure.png "a2e-mmc github organizational structure")
 
