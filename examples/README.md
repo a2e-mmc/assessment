@@ -13,18 +13,19 @@ the `mmctools` repository and provide a basic analysis framework.
 - Read Wind Profiler radar data, and optionally, the scan properties using the
   `mmctools.measurements.radar.profiler()`
 - Process a directory of downloaded radar data, combining the data into a single
-  Pandas dataframe
+  Pandas dataframe using `mmctools.dataloader.read_dir()`
 
 `examples/002-process_filelist.ipynb`
 
 - Process a list of downloaded radar data files, using the radar profiler
-  reader, combining the data into a single Pandas dataframe
+  reader, combining the data into a single Pandas dataframe using 
+  `mmctools.dataloader.read_files()`
 
 `examples/003-process_subdirs_quickplot.ipynb`
 
 - Process subdirectories of downloaded sodar data files, combining the data into
-  a single Pandas dataframe
-- Quick time-height plot
+  a single Pandas dataframe using `mmctools.dataloader.read_date_dirs()`
+- Quick time-height plot using `mmctools.plotting.plot_timeheight()`
 
 ## advanced data processing 
 
