@@ -12,7 +12,7 @@ Notebooks to preprocess mesoscale data for internal forcing coupling methods, in
 - `obs_to_sowfa`: Generate SOWFA readable internal forcing files based on observations
 
 ### Boundary
-Notebooks to preprocess mescoscasle data for boundary forcing coupling methods
+Notebooks to preprocess mescoscale data for boundary forcing coupling methods
 
 ## Postprocessing
 Notebooks for individual postprocessing and data analysis
