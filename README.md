@@ -8,7 +8,7 @@ The contents of this repository include:
 - **Standardized datasets** from observations and simulations, ready for use in our analyses
 - **MMC studies** that utilize these datasets
 
-The structure of this repository (and the parent `a2e-mmc` organization) is as follows:
+The planned structure of this repository is as follows:
 
-![alt text](a2e-mmc_org_structure.png "a2e-mmc github organizational structure")
+![alt text](assessment.png "github a2e-mmc/assessment organizational structure")
 
