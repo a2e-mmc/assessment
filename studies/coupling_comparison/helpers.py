@@ -160,6 +160,7 @@ def calc_spectra(df,times,heights,interval,window_size):
                                              window_size=window_size)
             spectra['datetime'] = pd.to_datetime(tstart)
             spectra['height'] = height
+            spectra.reset_index(inplace=True)
             dflist.append(spectra)
     df_spectra = pd.concat(dflist)
     return df_spectra.set_index(['datetime','height','frequency']).sort_index()
