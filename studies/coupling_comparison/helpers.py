@@ -74,6 +74,7 @@ def load_tower_reference_spectra(fpath,times,heights,interval,window_size):
 def calc_stats(df,offset='10min'):
     """
     Calculate statistics for a given data frame
+    and return a new dataframe
     """
     # calculate statistical quantities on unstacked 
     unstacked = df.unstack()
@@ -92,7 +93,7 @@ def calc_stats(df,offset='10min'):
 
 def calc_QOIs(df):
     """
-    Calculate derived quantities
+    Calculate derived quantities (IN PLACE)
     """
     df['wspd'],df['wdir'] = calc_wind(df)
     df['u*'] = (df['uw']**2 + df['vw']**2)**0.25
@@ -148,6 +149,7 @@ def reindex_if_needed(df,dt=None):
 def calc_spectra(df,times,heights,interval,window_size):
     """
     Calculate spectra for a given number of times and heights
+    and return a new dataframe
     """
     dflist = []
     for tstart in times:
@@ -170,6 +172,7 @@ def calc_spectra(df,times,heights,interval,window_size):
 def calc_rotor_average(df,zhub,diameter):
     """
     Calculate rotor-averaged quantities
+    and return a new dataframe
     """
     zlow  = zhub - diameter/2.
     zhigh = zhub + diameter/2.
