@@ -54,8 +54,8 @@ def load_sowfa_data(dpath,times,heights,interval='1h',window_size='10min'):
     fpath = os.path.join(dpath,'postProcessing/planarAverages')
     df_pavg = reader_planar_average(fpath)
     
-    # Calculate 10-min statistics and quantities of interest
-    df_pavg_10min = calc_stats(df_pavg)
+    # Calculate 10-min averages and quantities of interest
+    df_pavg_10min = df_pavg.unstack().resample('10min').mean().stack()
     calc_QOIs(df_pavg_10min)
     
     # Calculate hourly averages
@@ -120,14 +120,14 @@ def reader_planar_average(fpath):
     Read sowfa planar average file and convert to standard pandas dataframe
     """
     # Read in planar average data and convert to pandas DataFrame
-    df = PlanarAverages(fpath,verbose=False).to_pandas()
+    df = PlanarAverages(fpath,varList=['U','UU','T','TU'],verbose=False).to_pandas()
     
     # Convert time in seconds to datetime
     df.reset_index(inplace=True)
     df['t'] = pd.to_timedelta(df['t'],unit='s') + pd.to_datetime(tref)
     
     # Rename columns
-    df.columns = ['datetime', 'height', 'u', 'v', 'w', 'theta']
+    df.columns = ['datetime', 'height', 'u', 'v', 'w', 'uu', 'uv', 'uw', 'vv', 'vw', 'ww', 'theta', 'thetau', 'thetav', 'thetaw']
     
     # Set multi-index with levels datetime and height
     df.set_index(['datetime','height'],inplace=True)
