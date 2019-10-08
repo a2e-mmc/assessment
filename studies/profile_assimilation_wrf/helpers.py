@@ -120,14 +120,14 @@ def reader_planar_average(fpath):
     Read sowfa planar average file and convert to standard pandas dataframe
     """
     # Read in planar average data and convert to pandas DataFrame
-    df = PlanarAverages(fpath,varList=['U','UU','T','TU'],verbose=False).to_pandas()
+    df = PlanarAverages(fpath,varList=['U','UU','T'],verbose=False).to_pandas()
     
     # Convert time in seconds to datetime
     df.reset_index(inplace=True)
     df['t'] = pd.to_timedelta(df['t'],unit='s') + pd.to_datetime(tref)
     
     # Rename columns
-    df.columns = ['datetime', 'height', 'u', 'v', 'w', 'uu', 'uv', 'uw', 'vv', 'vw', 'ww', 'theta', 'thetau', 'thetav', 'thetaw']
+    df.columns = ['datetime', 'height', 'u', 'v', 'w', 'uu', 'uv', 'uw', 'vv', 'vw', 'ww', 'theta']
     
     # Set multi-index with levels datetime and height
     df.set_index(['datetime','height'],inplace=True)
