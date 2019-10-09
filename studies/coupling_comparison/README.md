@@ -1,5 +1,5 @@
 # Flat terrain coupling comparison
-Lead: Matthew CHurchfield
+Lead: Matthew Churchfield
 
 Set of Jupyter notebooks used for the coupling comparison study based on the SWiFT diurnal cycle case
 
@@ -7,9 +7,10 @@ Set of Jupyter notebooks used for the coupling comparison study based on the SWi
 
 The comparison study currently involves the following simulations:
 
-- `internal_bcc_wrf_sowfa`: WRF to SOWFA based on internal forcing with mesoscale budget components
-- `internal_pat_wrf_sowfa`: WRF to SOWFA based on internal forcing with mesoscale profile assimilation
-- `internal_pat_obs_sowfa_noT`: Observations to SOWFA based on internal forcing with observed profile assimilation (no temperature forcing)
+- `internal_bcc_wrf_sowfa`: WRF to SOWFA based on internal forcing with mesoscale budget components (Dries)
+- `internal_pat_wrf_sowfa`: WRF to SOWFA based on internal forcing with mesoscale profile assimilation (Dries)
+- `internal_pat_obs_sowfa_noT`: Observations to SOWFA based on internal forcing with observed profile assimilation (no temperature forcing) (Dries)
+- ...
 
 
 ## Preprocessing
