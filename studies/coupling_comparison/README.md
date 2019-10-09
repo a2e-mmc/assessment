@@ -1,5 +1,5 @@
 # Flat terrain coupling comparison
-Lead: Dries Allaerts
+Lead: Matthew CHurchfield
 
 Set of Jupyter notebooks used for the coupling comparison study based on the SWiFT diurnal cycle case
 
@@ -17,5 +17,5 @@ Notebooks to preprocess mescoscale data for boundary forcing coupling methods
 ## Postprocessing
 Notebooks for individual postprocessing and data analysis
 
-## Coupling comparison
+## Comparison
 Notebooks to compare performance of different coupling techniques
