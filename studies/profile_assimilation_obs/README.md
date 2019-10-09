@@ -1,4 +1,4 @@
-# Demonstratate the use of the profile assimilation technique with observations
+# Demonstrate the use of the profile assimilation technique with observations
 Lead: Eliot Quon
 
 Jupyter notebooks and file with helper functions to produce figures of the paper
@@ -21,6 +21,6 @@ is based on the notebooks
 - `assessment/studies/coupling_comparison/preprocessing/internal/wrf_to_sowfa`
 - `assessment/studies/coupling_comparison/preprocessing/internal/obs_to_sowfa`
 
-The output of 9 virtual towers of read and processed by the notebook
+The output of 9 virtual towers are read and processed by the notebook
 
 - `assessment/studies/coupling_comparison/postprocessing/analyse_virtual_tower_data_template`
