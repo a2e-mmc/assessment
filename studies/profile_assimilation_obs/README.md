@@ -1,4 +1,4 @@
-# Demonstrate the profile assimilation technique with observations
+# Demonstratate the use of the profile assimilation technique with observations
 Lead: Eliot Quon
 
 Jupyter notebooks and file with helper functions to produce figures of the paper
