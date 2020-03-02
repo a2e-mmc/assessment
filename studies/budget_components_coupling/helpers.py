@@ -15,15 +15,15 @@ if module_path not in sys.path:
 
 from mmctools.helper_functions import calc_wind, covariance, power_spectral_density, theta, T_to_Tv
 
-# manually add NWTC/datatools repo to PYTHONPATH
+# manually add NREL/windtools repo to PYTHONPATH
 module_path = os.path.join(os.environ['HOME'],'tools')
 if module_path not in sys.path:
     sys.path.append(module_path)
             
-from datatools.SOWFA6.postProcessing.averaging import PlanarAverages
-from datatools.SOWFA6.postProcessing.probes import Probe
-from datatools.SOWFA6.postProcessing.sourceHistory import SourceHistory
-from datatools import openfoam_util
+from windtools.SOWFA6.postProcessing.averaging import PlanarAverages
+from windtools.SOWFA6.postProcessing.probes import Probe
+from windtools.SOWFA6.postProcessing.sourceHistory import SourceHistory
+from windtools.openfoam import InputFile
 
 
 
@@ -90,7 +90,7 @@ def reader_probe(fpath):
     Read sowfa probe file and convert to standard pandas dataframe
     """
     # Read in virtual tower data and convert to pandas DataFrame
-    df = Probe(fpath,verbose=False).to_pandas()
+    df = Probe(fpath).to_pandas()
     
     # Convert time in seconds to datetime
     df.reset_index(inplace=True)
@@ -109,7 +109,7 @@ def reader_planar_average(fpath):
     Read sowfa planar average file and convert to standard pandas dataframe
     """
     # Read in planar average data and convert to pandas DataFrame
-    df = PlanarAverages(fpath,varList=['U','UU','T'],verbose=False).to_pandas()
+    df = PlanarAverages(fpath,varList=['U','UU','T']).to_pandas()
     
     # Convert time in seconds to datetime
     df.reset_index(inplace=True)
@@ -194,19 +194,19 @@ def load_sowfa_input_file(fpath):
     """
     Load a specific SOWFA input file
     """
-    f = openfoam_util.read_all_defs(fpath,verbose=False)
+    f = InputFile(fpath)
     
     # Cast data to pandas dataframe
     dflist = []
-    for i in range(f['sourceTableMomentumX'][:,0].size):
+    for i in range(len(f['sourceTableMomentumX'])):
         data = {}
         data['height'] = f['sourceHeightsMomentum']
-        data['u'] = f['sourceTableMomentumX'][i,1:]
-        data['v'] = f['sourceTableMomentumY'][i,1:]
-        data['w'] = f['sourceTableMomentumZ'][i,1:]
-        data['thetav'] = f['sourceTableTemperature'][i,1:]
+        data['u'] = f['sourceTableMomentumX'][i][1:]
+        data['v'] = f['sourceTableMomentumY'][i][1:]
+        data['w'] = f['sourceTableMomentumZ'][i][1:]
+        data['thetav'] = f['sourceTableTemperature'][i][1:]
         df = pd.DataFrame(data=data)
-        df['t'] = f['sourceTableMomentumX'][i,0]
+        df['t'] = f['sourceTableMomentumX'][i][0]
         dflist.append(df)
     df = pd.concat(dflist)
     
