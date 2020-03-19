@@ -3,9 +3,19 @@ import numpy as np
 import xarray as xr
 from mmctools.wrf.utils import tsout_seriesReader
 
-
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# - - - - - - - - - - - - - -   USER SETTINGS   - - - - - - - - - - - - - - - - #
+# Base location of simulations (2 levels below individual restarts)
 wrf_dir   = '/glade/scratch/hawbecke/WRF/MMC/FINO1/20100512_to_20100526/'
-cases     = ['ERAI_YSU_KF_CHRN_OST','ERAI_YSU_KF_JMNZ_OST','ERAI_YSU_KF_CHRN_GHR']
+# Name of the case (e.g. GFS_YSU_KF_CHRN_OST) (1 level below individual restarts)
+cases     = ['ERAI_YSU_KF_CHRN_OST']
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+# - - - - - - - - - - - - - - END USER SETTINGS - - - - - - - - - - - - - - - - #
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
+
+
+# These should not change: setup script was written to have this be standard
 restarts  = ['FINO_2010051212', 'FINO_2010051412', 'FINO_2010051612', 'FINO_2010051812',
              'FINO_2010052012', 'FINO_2010052212', 'FINO_2010052412']
 wrf_start = ['2010-05-12 12:00:00', '2010-05-14 12:00:00', '2010-05-16 12:00:00', '2010-05-18 12:00:00',
