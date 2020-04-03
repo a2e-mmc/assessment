@@ -34,9 +34,20 @@ for case in cases:
         twr_path = '{}/FINO{}.nc'.format(case_dir,fino)
         if path.exists(twr_path):
             print('loading in full dataset!')
-            wrf_twrs[case] = xr.open_dataset(twr_path)
+            wrf_twrs[case]['FN{}'.format(fino)] = xr.open_dataset(twr_path)
         else:
-            obs_levels = np.asarray([ 28.,  29.,  30.,  40.,  50.,  55.,  60.,  70.,  80.,  90.,  95.,  100., 106.])
+            if read_in_obs:
+                obs_ds = fino_obs['FINO{}'.format(fino)]
+                obs_levels = np.unique(sorted(np.concatenate([obs_ds.spd_levels.data, obs_ds.dir_levels.data,obs_ds.tmp_levels.data])))
+            else:
+                if fino == 1:
+                    obs_levels = np.asarray([30.,  33.,  40.,  50.,  60.,  70.,  80.,  90., 100.])
+                elif fino == 2:
+                    obs_levels = np.asarray([30.,  31.,  32.,  40.,  42.,  50.,  51.,  52.,  62.,  70.,  71.,  72.,  82.,  91.,  92.,  99., 102.])
+                elif fino == 3:
+                    obs_levels = np.asarray([28.,  29.,  30.,  40.,  50.,  55.,  60.,  70.,  80.,  90.,  95.,  100., 106.])
+                else:
+                    print('fino can only be 1-3')
             wrf_twrs[case]['FN{}'.format(fino)] = tsout_seriesReader(case_dir,restarts,wrf_start,'d03',structure='unordered',
                                                                      time_step=10.0,select_tower=['FN{}'.format(fino)],
                                                                      heights=obs_levels,height_var='ph')
