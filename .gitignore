@@ -1,0 +1,27 @@
+# certificates from dap-py
+.cert
+
+# python/jupyter stuff
+.ipynb_checkpoints
+__pycache__
+
+# Mac stuff
+.DS_Store
+
+# Output data
+figures/
+data/
+*.csv
+*.png
+*.pdf
+
+# LaTeX/beamer files
+*.aux
+*.log
+*.bbl
+*.blg
+*.nav
+*.out
+*.snm
+*.synctex.gz
+*.toc

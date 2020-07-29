@@ -1,0 +1,42 @@
+graph TD
+
+%% Define colors
+classDef repo_type fill:#ef8d22,stroke:#333,stroke-width:2px; %% orange
+classDef submodule_type fill:#c7e8ac,stroke:#333,stroke-width:2px; %% green
+classDef code_type fill:#c1e4f7,stroke:#333,stroke-width:2px; %% blue
+classDef nb_type fill:#ffeca9,stroke:#333,stroke-width:2px; %% yellow
+classDef inprogress stroke-dasharray: 5, 5
+
+%% Set edges to be curved (try monotoneX for a nice alternative)
+linkStyle default interpolate basis;
+
+%%org((a2e-mmc organization))
+%%org --> assessment
+assessment
+class assessment repo_type
+
+assessment --> datasets(datasets)
+assessment --> studies(studies)
+datasets --> wfip2(WFIP2)
+datasets --> swift(SWiFT)
+datasets -.-> otherdata("(Peetz Table)")
+wfip2 --> Wasco[Wasco analyses]
+wfip2 --> otheranalyses[other analyses]
+swift --> TTUtower[TTU tower]
+swift --> TTUradar[TTU radar]
+studies --> couplingcomparison["coupling<br>comparison"]
+studies --> perturbations["perturbation<br>methods"]
+class datasets,studies submodule_type
+class wfip2,swift,otherdata submodule_type
+class otherdata inprogress
+class TTUtower,TTUradar nb_type
+class Wasco,otheranalyses nb_type
+class couplingcomparison,perturbations nb_type
+
+subgraph Legend
+    repository --> subdirectory
+    subdirectory --> notebooks[jupyter notebook]
+    class repository repo_type
+    class subdirectory submodule_type
+    class notebooks nb_type
+end

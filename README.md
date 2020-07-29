@@ -2,7 +2,20 @@
 Formal assessment of state-of-the-science atmospheric simulation methodologies within the Atmosphere-to-Electrons (a2e) mesoscale-to-microscale coupling (MMC) project
 
 The contents of this repository include:
-- Demonstration of our data processing and analysis procedures--separated into data standardization, calculation, and plotting steps--in the form of Jupyter notebooks
-- High-level python code to accomplish the aforementioned tasks
 
-See the `dev` branch for the latest work in progress.
+- **Examples** of our data processing and analysis procedures--separated into data standardization, analysis, and plotting steps--in the form of Jupyter notebooks
+- **High-level python code** to accomplish the aforementioned tasks
+- **Standardized datasets** from observations and simulations, ready for use in our analyses
+- **MMC studies** that utilize these datasets
+
+Note: If you see the following message on github when trying to view a notebook
+on github,
+> Sorry, something went wrong. Reload?
+
+Try pasting the URL into https://nbviewer.jupyter.org
+
+## Layout of repository
+
+The planned structure of this repository is as follows:
+
+![alt text](assessment.png "github a2e-mmc/assessment organizational structure")
