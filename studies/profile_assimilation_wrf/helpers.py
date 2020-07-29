@@ -8,21 +8,20 @@ import pandas as pd
 from scipy.interpolate import interp1d
 
 # manually add a2e-mmc repos to PYTHONPATH if needed
-module_path = os.path.join(os.environ['HOME'],'tools','a2e-mmc')
+module_path = os.path.join(os.environ['HOME'],'a2e-mmc')
 if module_path not in sys.path:
     sys.path.append(module_path)
 
 from mmctools.helper_functions import calc_wind, covariance, power_spectral_density, theta
 
-# manually add NWTC/datatools repo to PYTHONPATH
-module_path = os.path.join(os.environ['HOME'],'tools')
+# manually add windtools repo to PYTHONPATH
+module_path = os.path.join(os.environ['HOME'])
 if module_path not in sys.path:
     sys.path.append(module_path)
-            
-from datatools.SOWFA6.postProcessing.averaging import PlanarAverages
-from datatools.SOWFA6.postProcessing.probes import Probe
-from datatools.SOWFA6.postProcessing.sourceHistory import SourceHistory
-from datatools import openfoam_util
+from windtools.SOWFA6.postProcessing.averaging import PlanarAverages
+from windtools.SOWFA6.postProcessing.probes import Probe
+from windtools.SOWFA6.postProcessing.sourceHistory import SourceHistory
+from windtools.openfoam import InputFile
 
 
 
@@ -101,7 +100,7 @@ def reader_probe(fpath):
     Read sowfa probe file and convert to standard pandas dataframe
     """
     # Read in virtual tower data and convert to pandas DataFrame
-    df = Probe(fpath,verbose=False).to_pandas()
+    df = Probe(fpath).to_pandas()
     
     # Convert time in seconds to datetime
     df.reset_index(inplace=True)
@@ -120,7 +119,7 @@ def reader_planar_average(fpath):
     Read sowfa planar average file and convert to standard pandas dataframe
     """
     # Read in planar average data and convert to pandas DataFrame
-    df = PlanarAverages(fpath,varList=['U','UU','T'],verbose=False).to_pandas()
+    df = PlanarAverages(fpath,varList=['U','UU','T']).to_pandas()
     
     # Convert time in seconds to datetime
     df.reset_index(inplace=True)
@@ -139,7 +138,7 @@ def reader_source_history(fpath):
     Read sowfa source history file and convert to standard pandas dataframe
     """
     # Read in source history data and convert to pandas DataFrame
-    df = SourceHistory(fpath,verbose=False).to_pandas()
+    df = SourceHistory(fpath).to_pandas()
     
     # Convert time in seconds to datetime
     df.reset_index(inplace=True)
@@ -236,19 +235,26 @@ def load_sowfa_input_file(fpath):
     """
     Load a specific SOWFA input file
     """
-    f = openfoam_util.read_all_defs(fpath,verbose=False)
+    f = InputFile(fpath)
+
+    heights = np.array(f['sourceHeightsMomentum'])
+    assert np.all(heights == np.array(f['sourceHeightsTemperature']))
+    srcMomX = np.array(f['sourceTableMomentumX'])
+    srcMomY = np.array(f['sourceTableMomentumY'])
+    srcMomZ = np.array(f['sourceTableMomentumZ'])
+    srcTemp = np.array(f['sourceTableTemperature'])
     
     # Cast data to pandas dataframe
     dflist = []
-    for i in range(f['sourceTableMomentumX'][:,0].size):
+    for i in range(srcMomX[:,0].size):
         data = {}
         data['height'] = f['sourceHeightsMomentum']
-        data['u'] = f['sourceTableMomentumX'][i,1:]
-        data['v'] = f['sourceTableMomentumY'][i,1:]
-        data['w'] = f['sourceTableMomentumZ'][i,1:]
-        data['theta'] = f['sourceTableTemperature'][i,1:]
+        data['u'] = srcMomX[i,1:]
+        data['v'] = srcMomY[i,1:]
+        data['w'] = srcMomZ[i,1:]
+        data['theta'] = srcTemp[i,1:]
         df = pd.DataFrame(data=data)
-        df['t'] = f['sourceTableMomentumX'][i,0]
+        df['t'] = srcMomX[i,0]
         dflist.append(df)
     df = pd.concat(dflist)
     
