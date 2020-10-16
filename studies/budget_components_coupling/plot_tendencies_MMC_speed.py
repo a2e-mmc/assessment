@@ -79,6 +79,7 @@ while ifile < Nfiles:
     
     times1 = f1.variables['time'][:]
     dates1 = mdates.num2date(times1)
+    dates1 = pd.DatetimeIndex(dates1).tz_localize(None)
     # print(dates1)
     heights1 = f1.variables['z'][:]
     Nz = heights1.shape[0]
@@ -444,23 +445,22 @@ figname = siteID+'TimeHeight_Speed_'+"%.0f"%(Lav)+'km_'+"%.0f"%(tav[w])+'min.png
 #Zvarname = ('$Thw$','$Thadv$','$Thadvs$',)
 #figname = siteID+'TimeHeight_Thadv_'+"%.0f"%(Lav)+'km_'+"%.0f"%(tav[w])+'min.png'
 
-taxis_label = 'UTC time in hours since ' + datefrom.strftime('%Y-%m-%d %H:%M') + ', $L_{avg}$ = ' + "%i"%(Nav) + ' km, $t_{avg}$ = ' + "%.0f"%(tav[w]) + ' min'  
-  
+#taxis_label = 'UTC time in hours since ' + datefrom.strftime('%Y-%m-%d %H:%M') + ', $L_{avg}$ = ' + "%i"%(Nav) + ' km, $t_{avg}$ = ' + "%.0f"%(tav[w]) + ' min'  
 taxis_label = 'UTC time' 
       
 zaxis = heights 
 taxis = times
-# Zlevels = np.linspace(0,360,361, endpoint=True)
 Zlevels = np.linspace(0,21,22, endpoint=True)
 zaxis_label = '$z$ [m]'
-hoursFmt = mdates.DateFormatter('%H')
+hoursFmt = mdates.DateFormatter('%H%M')
 
 [X,Y]=np.meshgrid(taxis,zaxis)
 
 zlim = 2000.0
 #ticks = np.asarray(pd.date_range(datefrom,dateto,freq='6H'))
-ticks = np.linspace(mdates.date2num(datefrom),mdates.date2num(dateto),7)
-fig, ax = plt.subplots(2, 3, sharex='col', sharey='row')
+#ticks = np.linspace(mdates.date2num(datefrom),mdates.date2num(dateto),7)
+ticks = np.asarray(pd.date_range(datefrom,dateto,freq='12H'))
+fig, ax = plt.subplots(2, 3, sharex='col', sharey='row', figsize=(12,8)) # subfigsize: (4,4)
 Zcmap = plt.get_cmap('YlGnBu') # for dir: twilight # for wind: YlGnBu
 for iax in range (0,6):
     ix,iy = np.unravel_index(iax,(2,3))
@@ -475,6 +475,11 @@ for iax in range (0,6):
     ax[ix,iy].set_title(Zvarname[iax])
     ax[ix,iy].set_xticks(ticks)
 
+for axi,label in zip(ax[0,:],['a','b','c']):
+    axi.text(-0.1,-0.1,'('+label+')',transform=axi.transAxes,size=16)
+for axi,label in zip(ax[1,:],['d','e','f']):
+    axi.text(-0.1,-0.16,'('+label+')',transform=axi.transAxes,size=16)
+
 ax[0,0].set_ylabel(zaxis_label); ax[1,0].set_ylabel(zaxis_label)
 ax[1,1].set_xlabel(taxis_label)
 
@@ -486,7 +491,7 @@ cbar_ax = fig.add_axes([0.95, 0.12, 0.025, 0.75])
 cbar = fig.colorbar(CF, cax=cbar_ax)    
 cbar.ax.set_xlabel('[m s$^{-1}$]',labelpad = -237, x = 1.5)
 cbar.ax.xaxis.set_label_coords(1.05, 1.08)
-plt.savefig(figname, dpi=300, bbox_inches='tight')
+plt.savefig('Figures/'+figname, dpi=300, bbox_inches='tight')
 
 # Vertical profiles 
 # t0 = datetime.datetime(2013,11,9,18,0,0)  # stable LLjet
@@ -529,7 +534,8 @@ figname = siteID+'Profiles_'+"%.0f"%(Lav)+'km_'+t0.strftime('%Y-%m-%d_%H:%M')+'.
 linespec = ['b-','r-','k-','m-','g-','c-.'] 
 fig,ax = plt.subplots(1, 3, sharey='row', figsize=(8,6))
 fig.subplots_adjust(bottom=0.20)
-Nticks = 6
+#Nticks = 6; xticks = np.linspace(0,20,Nticks)
+hoursinterval = 6; xticks = np.arange(0,24,hoursinterval)
 ##for iax in range (0,4):
 for iax in range (0,3):
     for w in range(0,Nw):
@@ -538,7 +544,7 @@ for iax in range (0,3):
                         label = "%.0f"%(tav[w])+' min')
     ax[iax].set_xlabel(ZSlabel[iax],size=12)
     ax[iax].set_xlim([0, 12])
-    ax[iax].set_xticks(np.linspace(0,20,Nticks))
+    ax[iax].set_xticks(xticks)
     ax[iax].grid(which='major',color='k',linestyle='--')
  #   bx = ax[iax].twiny()
    # bx.plot(ZWD[i][iax][1:],heights[1:],color='grey',linestyle='-')
@@ -560,4 +566,4 @@ ax[2].legend(prop={'size':9})
 plt.setp([a.get_yticklabels() for a in ax[1:]], visible=False)
 plt.tight_layout()
 fig.subplots_adjust(top=0.94)
-plt.savefig(figname, dpi=300, bbox_inches='tight')
+plt.savefig('Figures/'+figname, dpi=300, bbox_inches='tight')
