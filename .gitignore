@@ -1,6 +1,9 @@
 # certificates from dap-py
 .cert
 
+# scripts
+*.sh
+
 # python/jupyter stuff
 .ipynb_checkpoints
 __pycache__
@@ -9,13 +12,19 @@ __pycache__
 .DS_Store
 
 # Output data
-figures/
 data/
 *.csv
+*.nc
+*.pkl
+*.pickle
+
+# Output graphics
+figures/
 *.png
+*.mp4
 *.pdf
 
-# LaTeX/beamer files
+# LaTeX/beamer output files
 *.aux
 *.log
 *.bbl
