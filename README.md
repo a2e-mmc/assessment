@@ -19,4 +19,3 @@ Try pasting the URL into https://nbviewer.jupyter.org
 The planned structure of this repository is as follows:
 
 ![alt text](assessment.png "github a2e-mmc/assessment organizational structure")
-
