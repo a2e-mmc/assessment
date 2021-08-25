@@ -10,12 +10,18 @@
 # In[7]:
 
 
-wrf_dir = '/p/lscratchh/lassman1/a2e-mmc/WRF/FINO/ERA5_grid2.0/'
-cases = ['microscale_setup_v2_CONTROL', 'microscale_setup_v2_CPM']
+#wrf_dir = '/p/lscratchh/lassman1/a2e-mmc/WRF/FINO/ERA5_grid2.0/'
+#cases = ['microscale_setup_v2_CONTROL', 'microscale_setup_v2_CPM']
+
+#wrf_dir = '/p/lustre1/lassman1/a2e-mmc/FINO/WRF/resims/' 
+#cases = ['microscale_setup_v2_CONTROL', 'microscale_setup_v2_CPM']
+
+wrf_dir = '/p/lustre1/lassman1/a2e-mmc/FINO/WRF/resims/'
+cases = ['CONTROL', 'CPM']
 
 
 
-pdata_save_dir = '/p/lustre1/lassman1/a2e-mmc/FINO/pdata/'
+pdata_save_dir = '/p/lustre1/lassman1/a2e-mmc/FINO/pdata_resim/'
 
 
 
@@ -40,12 +46,12 @@ list_file_filters = [#'mmc_d06_2010-05-16_01:[01][0-9]:[0-5][0-9]', \
                      #'mmc_d06_2010-05-16_02:[01][0-9]:[0-5][0-9]', \
                      #'mmc_d06_2010-05-16_02:[23][0-9]:[0-5][0-9]', \
                      #'mmc_d06_2010-05-16_02:[45][0-9]:[0-5][0-9]', \
-                     'mmc_d06_2010-05-16_03:[01][0-9]:[0-5][0-9]', \
-                     'mmc_d06_2010-05-16_03:[23][0-9]:[0-5][0-9]', \
-                     'mmc_d06_2010-05-16_03:[45][0-9]:[0-5][0-9]', \
-                     #'mmc_d06_2010-05-16_04:[01][0-9]:[0-5][0-9]', \
-                     #'mmc_d06_2010-05-16_04:[23][0-9]:[0-5][0-9]', \
-                     #'mmc_d06_2010-05-16_04:[45][0-9]:[0-5][0-9]', \
+                     #'mmc_d06_2010-05-16_03:[01][0-9]:[0-5][0-9]', \
+                     #'mmc_d06_2010-05-16_03:[23][0-9]:[0-5][0-9]', \
+                     #'mmc_d06_2010-05-16_03:[45][0-9]:[0-5][0-9]', \
+                     'mmc_d06_2010-05-16_04:[01][0-9]:[0-5][0-9]', \
+                     'mmc_d06_2010-05-16_04:[23][0-9]:[0-5][0-9]', \
+                     'mmc_d06_2010-05-16_04:[45][0-9]:[0-5][0-9]', \
                      #'mmc_d06_2010-05-16_05:[01][0-9]:[0-5][0-9]', \
                      #'mmc_d06_2010-05-16_05:[23][0-9]:[0-5][0-9]', \
              ]
@@ -112,8 +118,8 @@ def read_range(  current_ind,
 # In[ ]:
 
 
-print("HR3")
-current_ind, slice_hr1 = read_range( 0, case_id = 0, save_sfx = '_HR3', save_data = True)
+print("HR1")
+current_ind, slice_hr1 = read_range( 0, case_id = 1, save_sfx = '_HR4', save_data = True)
 #print("HR2")
 #current_ind = read_range( current_ind, save_sfx = '_HR2')
 #print("HR3")
