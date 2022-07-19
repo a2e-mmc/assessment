@@ -11,6 +11,11 @@ main_directory = '/glade/scratch/hawbecke/WRF/MMC/NYSERDA/SENSITIVITY_SUITE/prod
 from NYSERDA_case_dict import case_dict
 cases = [case_dict[x]['case_str'] for x in list(case_dict.keys())]
 
+# # # FOR TESTING # # #
+cases = [cases[0]] + cases[3:6]
+for cc,case in enumerate(cases): print(cc,case)
+# # # # # # # # # # # #
+
 dom_dict = {1: {'dt':15,
                 'marker': r'$ 1 $',
                 'ls':'-'},
@@ -29,6 +34,19 @@ dom_dict = {1: {'dt':15,
             }
 doms_of_interest = [1,2,3,4,5]
 
+def averageTslistData(data):
+    avg_twr = data.mean(dim='station')
+    avg_twr['lon'] = data.lon.mean(dim='station')
+    avg_twr['lat'] = data.lat.mean(dim='station')
+    avg_twr['zsurface'] = data.zsurface.mean(dim='station')
+
+    avg_twr = avg_twr.assign_coords({'station':'E06',
+                                     'lat':avg_twr.lat,
+                                     'lon':avg_twr.lon,
+                                     'zsurface':avg_twr.zsurface}).expand_dims({'station':1})
+    return(avg_twr)
+
+
 wrf_data = {}
 avg_twr_dict = {}
 
@@ -37,18 +55,18 @@ for dd,dom in enumerate(doms_of_interest):
     time_step = dom_dict[dom]['dt']
     dom_str = 'd0{}'.format(dom)
 
-    #for cc,case in enumerate(cases):
-    for cc,case in enumerate(cases[:1]):
+    for cc,case in enumerate(cases[:2]):
         if dd == 0:
             wrf_data[case] = {}
         print(case,dom)
 
         tower_f = '{0}tower_netCDFs/NYSERDA_{1}_towers_{2}.nc'.format(main_directory,case,dom_str)
+        avg_tower_f = tower_f.replace('.nc','_avg.nc') 
 
         sim_start = '2020-04-04 06:00:00'
         
         if dom >= 3:
-            restarts = sorted(glob.glob('{}{}/RESTART_?'.format(main_directory,cases[0])))[3:-1]
+            restarts = sorted(glob.glob('{}{}/RESTART_?'.format(main_directory,cases[0])))[3:]
             restarts = [rst.split('/')[-1] for rst in restarts]
             f_dir = '{}{}/'.format(main_directory,case)
             get_avg_profile = True
@@ -59,35 +77,78 @@ for dd,dom in enumerate(doms_of_interest):
 
         if path.exists(tower_f):
             wrf_data[case][dom_str] = xr.open_dataset(tower_f)
+
         else:
             print('Reading tslist output...')
-            tower_dat = tsout_seriesReader(fdir=f_dir,
-                                           restarts=restarts,
-                                           simulation_start_time=[sim_start]*len(restarts),
-                                           domain_of_interest=dom_str,
-                                           time_step=time_step,
-                                           structure='unordered',
-                                          )
-            print('Saving to file: {}'.format(tower_f))
-            tower_dat.to_netcdf(tower_f)
-            wrf_data[case][dom_str] = tower_dat
+            if dom != 5:
+                tower_dat = tsout_seriesReader(fdir=f_dir,
+                                               restarts=restarts,
+                                               simulation_start_time=[sim_start]*len(restarts),
+                                               domain_of_interest=dom_str,
+                                               time_step=time_step,
+                                               structure='unordered',
+                                              )
+                
+                print('Saving to file: {}'.format(tower_f))
+                tower_dat.to_netcdf(tower_f)
+                wrf_data[case][dom_str] = tower_dat
+            else:
+                get_avg_profile = False
+                chunked_list = list()
+                chunk_size = 2
+                for i in range(0, len(restarts), chunk_size):
+                    chunked_list.append(restarts[i:i+chunk_size])
+
+                for cc,chunk in enumerate(chunked_list):
+                    chunk_f = tower_f.replace('.nc','_chunk{}.nc'.format(cc))
+                    if not path.exists(chunk_f):
+                        tower_dat = tsout_seriesReader(fdir=f_dir,
+                                                       restarts=chunk,
+                                                       simulation_start_time=[sim_start]*len(chunk),
+                                                       domain_of_interest=dom_str,
+                                                       time_step=time_step,
+                                                       structure='unordered',
+                                                      )
+                        print('Saving to file: {}'.format(chunk_f))
+                        tower_dat.to_netcdf(chunk_f)
+                    else:
+                        tower_dat = xr.open_dataset(chunk_f)
+
+                    grid_stns = []
+                    for stn in tower_dat.station.data:
+                        if stn[0] == 'T':
+                            grid_stns += [str(stn)]
+
+                    avg_twr = averageTslistData(tower_dat.sel(station=grid_stns))
+                    if cc == 0:
+                        avg_twr_f = avg_twr
+                    else:
+                        avg_twr_f = xr.merge([avg_twr_f,avg_twr])
+                print('Saving to file: {}'.format(avg_tower_f))
+                if not path.exists(avg_tower_f):
+                    avg_twr.to_netcdf(avg_tower_f)
             
         if get_avg_profile:
-            avg_tower_f = tower_f.replace('.nc','_avg.nc') 
             if path.exists(avg_tower_f):
                 print('Average already exists {}'.format(avg_tower_f))
             else:
                 print('Taking average of tslist output')
-                avg_twr = wrf_data[case][dom_str].mean(dim='station')
-                avg_twr['lon'] = wrf_data[case][dom_str].lon.mean(dim='station')
-                avg_twr['lat'] = wrf_data[case][dom_str].lat.mean(dim='station')
-                avg_twr['zsurface'] = wrf_data[case][dom_str].zsurface.mean(dim='station')
+                grid_stns = []
+                for stn in wrf_data[case][dom_str].station.data:
+                    if stn[0] == 'T':
+                        grid_stns += [str(stn)]
+                avg_twr = averageTslistData(wrf_data[case][dom_str].sel(station=grid_stns))
+                #avg_twr = wrf_data[case][dom_str].mean(dim='station')
+                #avg_twr['lon'] = wrf_data[case][dom_str].lon.mean(dim='station')
+                #avg_twr['lat'] = wrf_data[case][dom_str].lat.mean(dim='station')
+                #avg_twr['zsurface'] = wrf_data[case][dom_str].zsurface.mean(dim='station')
 
-                avg_twr = avg_twr.assign_coords({'station':'E06',
-                                                 'lat':avg_twr.lat,
-                                                 'lon':avg_twr.lon,
-                                                 'zsurface':avg_twr.zsurface}).expand_dims({'station':1})
+                #avg_twr = avg_twr.assign_coords({'station':'E06',
+                #                                 'lat':avg_twr.lat,
+                #                                 'lon':avg_twr.lon,
+                #                                 'zsurface':avg_twr.zsurface}).expand_dims({'station':1})
 
                 avg_twr_dict[dom_str] = avg_twr
                 print('Saving to file: {}'.format(avg_tower_f))
                 avg_twr.to_netcdf(avg_tower_f)
+print('Finished.')
