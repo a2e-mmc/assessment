@@ -47,7 +47,6 @@ def averageTslistData(data):
     return(avg_twr)
 
 
-wrf_data = {}
 avg_twr_dict = {}
 
 for dd,dom in enumerate(doms_of_interest):
@@ -55,11 +54,7 @@ for dd,dom in enumerate(doms_of_interest):
     time_step = dom_dict[dom]['dt']
     dom_str = 'd0{}'.format(dom)
 
-    for cc,case in enumerate(cases[:2]):
-        if dd == 0:
-            wrf_data[case] = {}
-        print(case,dom)
-
+    for cc,case in enumerate(cases):
         tower_f = '{0}tower_netCDFs/NYSERDA_{1}_towers_{2}.nc'.format(main_directory,case,dom_str)
         avg_tower_f = tower_f.replace('.nc','_avg.nc') 
 
@@ -76,7 +71,7 @@ for dd,dom in enumerate(doms_of_interest):
             get_avg_profile = False
 
         if path.exists(tower_f):
-            wrf_data[case][dom_str] = xr.open_dataset(tower_f)
+            tower_dat = xr.open_dataset(tower_f)
 
         else:
             print('Reading tslist output...')
@@ -91,7 +86,6 @@ for dd,dom in enumerate(doms_of_interest):
                 
                 print('Saving to file: {}'.format(tower_f))
                 tower_dat.to_netcdf(tower_f)
-                wrf_data[case][dom_str] = tower_dat
             else:
                 get_avg_profile = False
                 chunked_list = list()
@@ -120,33 +114,26 @@ for dd,dom in enumerate(doms_of_interest):
                             grid_stns += [str(stn)]
 
                     avg_twr = averageTslistData(tower_dat.sel(station=grid_stns))
+                    del(tower_dat)
                     if cc == 0:
                         avg_twr_f = avg_twr
                     else:
                         avg_twr_f = xr.merge([avg_twr_f,avg_twr])
-                print('Saving to file: {}'.format(avg_tower_f))
                 if not path.exists(avg_tower_f):
+                    print('Saving to file: {}'.format(avg_tower_f))
                     avg_twr.to_netcdf(avg_tower_f)
             
+
         if get_avg_profile:
             if path.exists(avg_tower_f):
                 print('Average already exists {}'.format(avg_tower_f))
             else:
                 print('Taking average of tslist output')
                 grid_stns = []
-                for stn in wrf_data[case][dom_str].station.data:
+                for stn in tower_dat.station.data:
                     if stn[0] == 'T':
                         grid_stns += [str(stn)]
-                avg_twr = averageTslistData(wrf_data[case][dom_str].sel(station=grid_stns))
-                #avg_twr = wrf_data[case][dom_str].mean(dim='station')
-                #avg_twr['lon'] = wrf_data[case][dom_str].lon.mean(dim='station')
-                #avg_twr['lat'] = wrf_data[case][dom_str].lat.mean(dim='station')
-                #avg_twr['zsurface'] = wrf_data[case][dom_str].zsurface.mean(dim='station')
-
-                #avg_twr = avg_twr.assign_coords({'station':'E06',
-                #                                 'lat':avg_twr.lat,
-                #                                 'lon':avg_twr.lon,
-                #                                 'zsurface':avg_twr.zsurface}).expand_dims({'station':1})
+                avg_twr = averageTslistData(tower_dat.sel(station=grid_stns))
 
                 avg_twr_dict[dom_str] = avg_twr
                 print('Saving to file: {}'.format(avg_tower_f))
