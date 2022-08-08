@@ -12,7 +12,7 @@ from NYSERDA_case_dict import case_dict
 cases = [case_dict[x]['case_str'] for x in list(case_dict.keys())]
 
 # # # FOR TESTING # # #
-cases = [cases[0]] + cases[3:6]
+cases = [cases[0]] + cases[3:6] # + [cases[-1]]
 for cc,case in enumerate(cases): print(cc,case)
 # # # # # # # # # # # #
 
@@ -61,8 +61,30 @@ for dd,dom in enumerate(doms_of_interest):
         sim_start = '2020-04-04 06:00:00'
         
         if dom >= 3:
-            restarts = sorted(glob.glob('{}{}/RESTART_?'.format(main_directory,cases[0])))[3:]
+            restarts = sorted(glob.glob('{}{}/RESTART_*'.format(main_directory,case)))[3:]
             restarts = [rst.split('/')[-1] for rst in restarts]
+            # Get rid of duplicate restart directories... the last one is always good:
+            dup_restarts = []
+            for rst in restarts:
+                if len(rst) > len('RESTART_X'):
+                    dup_restarts += [rst]
+            head_restarts = []
+            for rst in dup_restarts:
+                head_rst = rst[:-2]
+                if head_rst not in head_restarts:
+                    head_restarts += [head_rst]
+            for head_rst in head_restarts:
+                dup_rsts = []
+                for dup_rst in dup_restarts:
+                    if head_rst in dup_rst: dup_rsts += [dup_rst]
+                dup_rsts = [head_rst] + dup_rsts
+                dup_rsts = sorted(dup_rsts)
+                keep_rst = dup_rsts[-1]
+                dup_rsts = dup_rsts[:-1]
+                add_ind = restarts.index(dup_rsts[0])
+                for rst in dup_rsts:
+                    restarts.remove(rst)
+                restarts = restarts[:add_ind] + [keep_rst] + restarts[add_ind+1:]
             f_dir = '{}{}/'.format(main_directory,case)
             get_avg_profile = True
         else:
@@ -121,7 +143,7 @@ for dd,dom in enumerate(doms_of_interest):
                         avg_twr_f = xr.merge([avg_twr_f,avg_twr])
                 if not path.exists(avg_tower_f):
                     print('Saving to file: {}'.format(avg_tower_f))
-                    avg_twr.to_netcdf(avg_tower_f)
+                    avg_twr_f.to_netcdf(avg_tower_f)
             
 
         if get_avg_profile:
