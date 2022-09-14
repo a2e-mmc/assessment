@@ -17,20 +17,25 @@ class assessment repo_type
 
 assessment --> datasets(datasets)
 assessment --> studies(studies)
-datasets --> wfip2(WFIP2)
 datasets --> swift(SWiFT)
-datasets -.-> otherdata("(Peetz Table)")
-wfip2 --> Wasco[Wasco analyses]
-wfip2 --> otheranalyses[other analyses]
-swift --> TTUtower[TTU tower]
-swift --> TTUradar[TTU radar]
+datasets --> wfip2(WFIP2)
+datasets --> fino(FINO)
+datasets --> nyserda(NYSERDA)
+swift --> TTUtower[TTU tower<br>analysis]
+swift --> TTUradar[TTU radar<br>analysis]
+wfip2 --> Wasco[Wasco<br>analyses]
+wfip2 --> physsite[Physics Site<br>analyses]
+fino --> FINO1[FINO1<br>analysis]
+nyserda --> nysbuoy[NYSERDA buoy<br>analyses]
 studies --> couplingcomparison["coupling<br>comparison"]
 studies --> perturbations["perturbation<br>methods"]
 class datasets,studies submodule_type
-class wfip2,swift,otherdata submodule_type
+class wfip2,swift,fino,nyserda,otherdata submodule_type
 class otherdata inprogress
 class TTUtower,TTUradar nb_type
-class Wasco,otheranalyses nb_type
+class Wasco,physsite nb_type
+class FINO1 nb_type
+class nysbuoy nb_type
 class couplingcomparison,perturbations nb_type
 
 subgraph Legend
