@@ -8,7 +8,14 @@ The contents of this repository include:
 - **Standardized datasets** from observations and simulations, ready for use in our analyses
 - **MMC studies** that utilize these datasets
 
-The structure of this repository (and the parent `a2e-mmc` organization) is as follows:
+Note: If you see the following message on github when trying to view a notebook
+on github,
+> Sorry, something went wrong. Reload?
 
-![alt text](a2e-mmc_org_structure.png "a2e-mmc github organizational structure")
+Try pasting the URL into https://nbviewer.jupyter.org
 
+## Layout of repository
+
+The planned structure of this repository is as follows:
+
+![alt text](assessment.png "github a2e-mmc/assessment organizational structure")
