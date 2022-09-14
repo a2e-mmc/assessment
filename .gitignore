@@ -7,3 +7,7 @@ __pycache__
 
 # Mac stuff
 .DS_Store
+
+# generated data/figures
+*.csv
+*.png
