@@ -22,7 +22,7 @@ from NYSERDA_case_dict import case_dict
 cases = [case_dict[x]['case_str'] for x in list(case_dict.keys())]
 
 # TESTING:
-cases = [cases[0]] + cases[3:6] + [cases[-1]]
+cases = [cases[0]] + cases[3:6]# + [cases[-1]]
 # SST Only:
 #cases = cases[:-2]
 
@@ -127,6 +127,13 @@ def get_data(ds,vars_to_extract=None):
         temp = temp.rename({'bottom_top_stag':'bottom_top'})
         del(ds['TKE_PBL'])
         ds['TKE_PBL'] = temp
+    
+    les_vars = ['m11','m22','m33']
+    for varn in les_vars:
+        if varn not in list(ds.data_vars):
+            print('creating {}'.format(varn))
+            ds[varn] = ds.wspd*0.0
+            ds[varn].name = varn
     if vars_to_extract is not None:
         ds = ds[vars_to_extract]
     return(ds)
@@ -145,9 +152,14 @@ def get_locs_for_domain(loc_dict,
     ts_i = ts.i.data
     ts_j = ts.j.data
     if window is not None:
-        half_window = int((window - 1)*0.5)
-        ts_i = np.arange(ts_i-half_window,ts_i+half_window+1)
-        ts_j = np.arange(ts_j-half_window,ts_j+half_window+1)
+        if type(window) is int:
+            half_window = int((window - 1)*0.5)
+            ts_i = np.arange(ts_i-half_window,ts_i+half_window+1)
+            ts_j = np.arange(ts_j-half_window,ts_j+half_window+1)
+        elif type(window) is list:
+            ts_i = np.asarray(window)
+            ts_j = np.asarray(window)
+            
     loc_dict[dom] = {'i':ts_i,'j':ts_j}
     return(loc_dict)
 
@@ -167,7 +179,7 @@ for dd,dom in enumerate([1,2,3,4,5]):
     
 vars_to_extract = ['wspd','wdir','T','TSK','ZNT','zs','TKE','QKE',
                    'T2','TKE_PBL','UST','HFX','LH','QFX','SST',
-                   'XLAT','XLONG','ua','va','wa']
+                   'XLAT','XLONG','ua','va','wa','m11','m22','m33']
 
 loc_dict = {}
 tower_dir = '/glade/scratch/hawbecke/WRF/MMC/NYSERDA/SENSITIVITY_SUITE/production/tower_netCDFs/'
@@ -176,14 +188,37 @@ twr_of_interest = 'E06'
 
 domain_window_dict = {1:None,
                       2:None,
-                      3:5,
-                      4:25,
-                      5:125}
+                      3:24,
+                      4:[],
+                      5:[]}
+
+twr_lat = 39.546772
+twr_lon = -73.428892
+
+for dd,dom in enumerate([4,5]):
+    wrf_dom = xr.open_dataset('{}{}/{}'.format(main_directory,cases[0],wrfout_file_dict[dom][0]),decode_times=False).isel(Time=0)
+    dom_lat = wrf_dom.XLAT
+    dom_lon = wrf_dom.XLONG
+    dist = np.sqrt((dom_lat - twr_lat)**2 + (dom_lon - twr_lon)**2)
+    twr_j,twr_i = np.where(dist==np.min(dist))
+    twr_j,twr_i = twr_j[0],twr_i[0]
+    dom_u10 = wrf_dom.U10
+    window_xe = len(wrf_dom.west_east)
+    window_xs = int(window_xe/2)
+    window_ye = len(wrf_dom.south_north)
+    window_ys = int(window_ye/2)
+    
+    window_xe -= 10
+    window_ye -= 10
+    
+    wrf_dom.close()
+    domain_window_dict[dom] = list(np.arange(window_xs,window_xe+1))
+
 
 for cc,case in enumerate(cases):
     
     if interp_data:
-        case_ds_fname = '{}extracted_data/{}_interpolated_extracted_data.nc'.format(main_directory,case)
+        case_ds_fname = '{}extracted_data/{}_interpolated_extracted_data_largeSubsection.nc'.format(main_directory,case)
     else:
         case_ds_fname = '{}extracted_data/{}_extracted_data.nc'.format(main_directory,case)
     print(case)
@@ -230,9 +265,12 @@ for cc,case in enumerate(cases):
                     ds['TKEres'] = ds.TKE*0.0
 
                 ds = ds.rename({'TKE':'TKEsgs'})
+                if dom >= 3:
+                    ds['TKEsgs'] += ds.m11 + ds.m22 + ds.m33
+
                 if interp_data:
                     ds = ds.assign_coords({'level':ds.zs}).rename({'bottom_top':'level'})
-                    ds = ds.interp(coords={'level':nyserda_obs.level},method='linear')
+                    ds = ds.interp(coords={'level':nyserda_obs.level.data},method='linear')
                 ds = ds.expand_dims({'datetime':[wrf_time]},axis=0)
                 ds = ds.drop(['XTIME'])
                 if ww == 0:
