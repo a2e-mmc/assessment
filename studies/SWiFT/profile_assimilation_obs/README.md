@@ -28,11 +28,7 @@ The numerical setup and microscale output is based on the coupling comparison st
 - [assessment/studies/SWiFT/coupling_comparison/preprocessing/internal/wrf_to_sowfa](https://github.com/a2e-mmc/assessment/blob/master/studies/SWiFT/coupling_comparison/preprocessing/internal/wrf_to_sowfa.ipynb)
 - [assessment/studies/SWiFT/coupling_comparison/preprocessing/internal/obs_to_sowfa](https://github.com/a2e-mmc/assessment/blob/master/studies/SWiFT/coupling_comparison/preprocessing/internal/obs_to_sowfa.ipynb)
 
-## Processing of SOWFA output data
-Processing of SOWFA output data is based on the following python scripts:
-- [archive_sowfa_probe.py](archive_sowfa_probe.py): Script to convert virtual tower data (so called probes) from SOWFA specific output format to a netcdf file.
-- [probe_raw2stats.py](probe_raw2stats.py): Script to calculate 10-min statistics from raw virtual tower data. Output is stored in a netcdf file
-- [probe_raw2spectra.py](probe_raw2spectra.py): Script to calculate spectra from raw virtual tower data. Output is stored in a netcdf file
-
-## Analysis
-The analysis of simulation results and comparison with reference data reported in the manuscript submitted to Wind Energy can be found in the various notebooks in this repository.
+## Postprocessing
+Postprocessing of simulation data is organized in two steps:
+1. Processing of SOWFA "raw" output data with scripts in [raw_data_processing](raw_data_processing) directory
+2. Analysis of results based on notebooks in [analysis](analysis) directory
