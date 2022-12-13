@@ -21,8 +21,12 @@ from NYSERDA_case_dict import case_dict
 
 cases = [case_dict[x]['case_str'] for x in list(case_dict.keys())]
 
+# Shallow only:
+cases = cases[-2:-1]
+
 # TESTING:
-cases = [cases[0]] + cases[3:6]# + [cases[-1]]
+#cases = [cases[0]] + cases[3:6]# + [cases[-1]]
+
 # SST Only:
 #cases = cases[:-2]
 
@@ -145,7 +149,7 @@ def get_locs_for_domain(loc_dict,
                         twr,
                         window=None):
     ts_fname = '{}NYSERDA_{}_towers_d0{}.nc'.format(tower_dir,case,dom)
-    if dom == 5:
+    if dom >= 4:
         ts_fname = ts_fname.replace('.nc','_chunk0.nc')
     ts = xr.open_dataset(ts_fname)
     ts = ts.sel(station=twr)
@@ -186,39 +190,52 @@ tower_dir = '/glade/scratch/hawbecke/WRF/MMC/NYSERDA/SENSITIVITY_SUITE/productio
 
 twr_of_interest = 'E06'
 
-domain_window_dict = {1:None,
-                      2:None,
-                      3:24,
-                      4:[],
-                      5:[]}
+large_domain = False
+
+if large_domain:
+    domain_window_dict = {1:None,
+                          2:None,
+                          3:24,
+                          4:[],
+                          5:[]}
+else:
+    domain_window_dict = {1:None,
+                          2:None,
+                          3:5,
+                          4:25,
+                          5:125}
 
 twr_lat = 39.546772
 twr_lon = -73.428892
 
-for dd,dom in enumerate([4,5]):
-    wrf_dom = xr.open_dataset('{}{}/{}'.format(main_directory,cases[0],wrfout_file_dict[dom][0]),decode_times=False).isel(Time=0)
-    dom_lat = wrf_dom.XLAT
-    dom_lon = wrf_dom.XLONG
-    dist = np.sqrt((dom_lat - twr_lat)**2 + (dom_lon - twr_lon)**2)
-    twr_j,twr_i = np.where(dist==np.min(dist))
-    twr_j,twr_i = twr_j[0],twr_i[0]
-    dom_u10 = wrf_dom.U10
-    window_xe = len(wrf_dom.west_east)
-    window_xs = int(window_xe/2)
-    window_ye = len(wrf_dom.south_north)
-    window_ys = int(window_ye/2)
-    
-    window_xe -= 10
-    window_ye -= 10
-    
-    wrf_dom.close()
-    domain_window_dict[dom] = list(np.arange(window_xs,window_xe+1))
+if large_domain:
+    for dd,dom in enumerate([4,5]):
+        wrf_dom = xr.open_dataset('{}{}/{}'.format(main_directory,cases[0],wrfout_file_dict[dom][0]),decode_times=False).isel(Time=0)
+        dom_lat = wrf_dom.XLAT
+        dom_lon = wrf_dom.XLONG
+        dist = np.sqrt((dom_lat - twr_lat)**2 + (dom_lon - twr_lon)**2)
+        twr_j,twr_i = np.where(dist==np.min(dist))
+        twr_j,twr_i = twr_j[0],twr_i[0]
+        dom_u10 = wrf_dom.U10
+        window_xe = len(wrf_dom.west_east)
+        window_xs = int(window_xe/2)
+        window_ye = len(wrf_dom.south_north)
+        window_ys = int(window_ye/2)
+
+        window_xe -= 10
+        window_ye -= 10
+
+        wrf_dom.close()
+        domain_window_dict[dom] = list(np.arange(window_xs,window_xe+1))
 
 
 for cc,case in enumerate(cases):
     
     if interp_data:
-        case_ds_fname = '{}extracted_data/{}_interpolated_extracted_data_largeSubsection.nc'.format(main_directory,case)
+        if large_domain:
+            case_ds_fname = '{}extracted_data/{}_interpolated_extracted_data_largeSubsection.nc'.format(main_directory,case)
+        else:
+            case_ds_fname = '{}extracted_data/{}_interpolated_extracted_data.nc'.format(main_directory,case)
     else:
         case_ds_fname = '{}extracted_data/{}_extracted_data.nc'.format(main_directory,case)
     print(case)
@@ -239,7 +256,9 @@ for cc,case in enumerate(cases):
                                                    tower_dir,
                                                    case,
                                                    dom,
-                                                   twr_of_interest,window=domain_window_dict[dom])
+                                                   twr_of_interest,
+                                                   window=domain_window_dict[dom]
+                                                   )
 
                 ds = get_data(ds,vars_to_extract=vars_to_extract)
 
