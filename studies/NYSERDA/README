@@ -1,0 +1,27 @@
+This directory contains all scripts necessary for downloading auxiliary SST files, overwriting
+SST in met_em files, and analyzing the WRF results for the NYSERDA test suite. To set up the 
+NYSERDA cases, use the scripts found in the a2e-mmc/WRF-Setups github repo.
+
+1. To download SST, the scripts rely on a NASA-JPL data archive. Unfortunately, this archive has
+changed since the original datasets were downloaded so the new scripts are only working for a few
+of the SST datasets. Regardless, to download what you can, follow the steps within
+https://github.com/podaac/data-subscriber to install the necessary codes and set up an account
+with Earthdata. Then, the script, SST/DownloadSST_new.py, will download the necessary files.
+
+The GOES-16 gap-filled SST data was collected via personal communication with Mike Optis and 
+Stephanie Redfern at NREL.
+
+2. For overwriting SST on met_em files, make sure that you have run the base case through
+WPS so that there are met_em files to overwrite. With the location of the met_em files and
+the auxiliary SST datasets, the script, NYSERDA_OverwriteSST.py, will be used to create 
+new met_em files for the simulation suite.
+
+3. After the new SST datasets are made, return to the setup script in WRF-Setups and run to
+create the rest of the cases.
+
+4. Run all cases to completion.
+
+5. The analysis depends on extracted data from wrfout files. Run ExtractWRFOUTdata.py to get
+the extracted data from each case.
+
+6. Analysis is then performed within the LES_Extract_Compare.ipynb notebook 
